@@ -1,28 +1,36 @@
-# 6-Stage Pipelined Processor
+# 5-Stage Pipelined Von-Neumann Processor
 
-## Overview
+A 32-bit RISC-like processor designed with a 5-stage pipeline, implemented in VHDL. 
 
-6-stage pipelined processor (Von Neumann) with RISC-like ISA. Implements Fetch, Decode, EX1, EX2, Memory, Write-Back stages. Handles data forwarding and static branch prediction. Supports interrupts. Written in VHDL.
+## Architecture Design
+- **Type**: Von-Neumann (Single memory for program and data).
+- **Registers**: Eight 32-bit general-purpose registers (R0-R7), PC, and SP (initial value: 2^20-1).
+- **Memory**: 1 MB address space with 32-bit width. 
 
-## Pipeline Stages
+### https://lucid.app/lucidspark/c142883f-288e-4f57-9a3c-7bcea2d290d8/edit?invitationId=inv_5b71bc48-80fe-4592-9855-08f51faea22d
 
-| Stage | Function |
-|-------|----------|
-| Fetch | Read instruction from memory |
-| Decode | Decode, read registers, generate control |
-| EX1 | ALU operation / address calculation |
-| EX2 | Branch resolution, memory address |
-| Memory | Load/Store access |
-| Write-Back | Write result to register file |
+## Instruction Set Architecture (ISA)
+The processor supports the following operations: 
 
-## ISA Summary
+### One-Operand Instructions
+- **NOP**: No operation.
+- **HLT**: Freezes the Program Counter until reset. 
+- **SETC**: Sets the carry flag to 1.
+- **NOT / INC**: Logical bitwise NOT and increment operations. 
+- **IN / OUT**: Data transfer from/to I/O ports. 
 
-- 8 general registers (R0-R7), PC, SP, CCR (Z,N,C)
-- 26 instructions: ADD, SUB, AND, MOV, SWAP, NOT, INC, IADD, LDM, LDD, STD, JZ, JN, JC, JMP, CALL, RET, PUSH, POP, IN, OUT, NOP, HLT, SETC, INT, RTI
-- 6-bit opcode (bits 31-26)
+### Two-Operand Instructions
+- **MOV / SWAP**: Move or exchange values between registers. 
+- **ADD / SUB / AND**: Arithmetic and logical operations with carry, zero, and negative flag updates. 
+- **IADD**: Add immediate value to a register. 
 
-## Tools
+### Memory & Branching
+- **PUSH / POP**: Stack operations using the Stack Pointer.
+- **LDM / LDD / STD**: Loading immediate values or memory contents, and storing to memory. 
+- **JZ / JN / JC / JMP**: Conditional jumps (Zero, Negative, Carry) and unconditional jumps.
+- **CALL / RET**: Subroutine execution and return.
+- **INT / RTI**: Software interrupt handling and return from interrupt.
 
-- VHDL (Modelsim / Questa for simulation)
-- EasyEDA (for schematic)
-
+## Pipeline Implementation
+- **Stages**: Fetch, Decode, Execute, Memory, and Write-back. 
+- **Hazards**: Includes Data Forwarding and Static Branch Prediction logic to manage pipeline hazards. 
