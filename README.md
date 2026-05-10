@@ -4,8 +4,8 @@ A 32-bit RISC-like processor designed with a 5-stage pipeline, implemented in VH
 
 ## Architecture Design
 - **Type**: Von-Neumann (Single memory for program and data).
-- **Registers**: Eight 32-bit general-purpose registers (R0-R7), PC, and SP (initial value: 2^20-1).
-- **Memory**: 1 MB address space with 32-bit width. 
+- **Registers**: Eight 32-bit general-purpose registers (R0-R7), PC, and SP (initial value: 2^12-1).
+- **Memory**: 4 KB address space with 32-bit width.
 
 ### https://lucid.app/lucidspark/c142883f-288e-4f57-9a3c-7bcea2d290d8/edit?invitationId=inv_5b71bc48-80fe-4592-9855-08f51faea22d
 

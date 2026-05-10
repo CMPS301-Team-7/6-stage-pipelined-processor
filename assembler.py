@@ -154,7 +154,7 @@ def assemble_program(lines):
         memory[current_address] = mc
         current_address += 1
 
-    MEMORY_SIZE = 4000
+    MEMORY_SIZE = 4096
     output = [memory.get(addr, "0" * 32) for addr in range(MEMORY_SIZE)]
 
     print(f"Instruction memory ends at: 0x{LAST_INSTR:X}")
