@@ -1,36 +1,142 @@
-# 5-Stage Pipelined Von-Neumann Processor
+# 6-Stage Pipelined Von-Neumann Processor
 
-A 32-bit RISC-like processor designed with a 5-stage pipeline, implemented in VHDL. 
+A 32-bit RISC-like processor implemented in VHDL. The design uses a single
+Von-Neumann memory for both instructions and data, with a 6-stage pipeline.
 
-## Architecture Design
-- **Type**: Von-Neumann (Single memory for program and data).
-- **Registers**: Eight 32-bit general-purpose registers (R0-R7), PC, and SP (initial value: 2^12-1).
-- **Memory**: 4 KB address space with 32-bit width.
+## Architecture
 
-### https://lucid.app/lucidspark/c142883f-288e-4f57-9a3c-7bcea2d290d8/edit?invitationId=inv_5b71bc48-80fe-4592-9855-08f51faea22d
+- **Memory model**: one shared instruction/data memory.
+- **Memory size**: 4096 words, 32 bits per word.
+- **Registers**: eight 32-bit general-purpose registers, `R0` to `R7`.
+- **Special registers**: 32-bit `PC`, 32-bit `SP`, and condition flags.
+- **Initial SP**: `2^12 - 1`.
+- **Flags**: `Z` zero, `N` negative, `C` carry.
 
-## Instruction Set Architecture (ISA)
-The processor supports the following operations: 
+## Pipeline Stages
 
-### One-Operand Instructions
-- **NOP**: No operation.
-- **HLT**: Freezes the Program Counter until reset. 
-- **SETC**: Sets the carry flag to 1.
-- **NOT / INC**: Logical bitwise NOT and increment operations. 
-- **IN / OUT**: Data transfer from/to I/O ports. 
+1. **Fetch**: fetches the next instruction from memory.
+2. **Decode**: decodes the instruction, reads registers, and generates control signals.
+3. **Execute 1**: performs ALU operations, forwarding, CCR handling, and SP calculation.
+4. **Execute 2**: resolves branches and calculates effective addresses for `LDD`/`STD`.
+5. **Memory**: reads from or writes to the shared memory.
+6. **Write Back**: writes results back to the register file or output port.
 
-### Two-Operand Instructions
-- **MOV / SWAP**: Move or exchange values between registers. 
-- **ADD / SUB / AND**: Arithmetic and logical operations with carry, zero, and negative flag updates. 
-- **IADD**: Add immediate value to a register. 
+## Supported Instructions
 
-### Memory & Branching
-- **PUSH / POP**: Stack operations using the Stack Pointer.
-- **LDM / LDD / STD**: Loading immediate values or memory contents, and storing to memory. 
-- **JZ / JN / JC / JMP**: Conditional jumps (Zero, Negative, Carry) and unconditional jumps.
-- **CALL / RET**: Subroutine execution and return.
-- **INT / RTI**: Software interrupt handling and return from interrupt.
+### No-Operand
 
-## Pipeline Implementation
-- **Stages**: Fetch, Decode, Execute, Memory, and Write-back. 
-- **Hazards**: Includes Data Forwarding and Static Branch Prediction logic to manage pipeline hazards. 
+- `NOP`
+- `HLT`
+- `SETC`
+- `RET`
+- `RTI`
+
+### One-Register
+
+- `NOT Rdst`
+- `INC Rdst`
+- `IN Rdst`
+- `OUT Rsrc`
+- `PUSH Rsrc`
+- `POP Rdst`
+
+### Register Operations
+
+- `MOV Rdst, Rsrc`
+- `SWAP Rdst, Rsrc`
+- `ADD Rdst, Rsrc1, Rsrc2`
+- `SUB Rdst, Rsrc1, Rsrc2`
+- `AND Rdst, Rsrc1, Rsrc2`
+
+### Immediate and Memory
+
+- `IADD Rdst, Rsrc, Imm`
+- `LDM Rdst, Imm`
+- `LDD Rdst, offset(Rsrc)`
+- `STD Rsrc1, offset(Rsrc2)`
+
+### Branching and Interrupts
+
+- `JZ Imm`
+- `JN Imm`
+- `JC Imm`
+- `JMP Imm`
+- `CALL Imm`
+- `INT index`
+
+External reset loads the `PC` from memory location `0`. External interrupt
+handling uses memory location `1`, while software interrupt vectors use memory
+locations `2` and `3`.
+
+## Main Files
+
+- `processor.vhd`: top-level processor integration.
+- `fetch_mem.vhd`: fetch stage and memory stage integration.
+- `decode.vhd`: decode stage and register file access.
+- `execute1.vhd`: ALU, forwarding, CCR, and SP logic.
+- `execute2.vhd`: branch decision and memory address calculation.
+- `control_unit.vhd`: opcode-to-control-signal logic.
+- `reg_file_memory.vhd`: unified memory initialized from `test.mem`.
+- `writeBack.vhd`: register-file write-back and output-port logic.
+- `assembler.py`: converts assembly programs into `.mem` files.
+- `test.asm`: sample assembly program.
+- `run.do`: ModelSim compile, wave setup, and simulation script.
+
+## Assembler Usage
+
+Generate a memory file from an assembly program:
+
+```powershell
+python assembler.py test.asm
+```
+
+This creates `test.mem`, which is loaded by `reg_file_memory.vhd` during
+simulation.
+
+Assembly numbers are written in hexadecimal. Use `.ORG` to place code or data
+at a specific memory address:
+
+```asm
+.ORG 0
+A0
+
+.ORG A0
+NOP
+HLT
+```
+
+## Simulation
+
+In ModelSim, run:
+
+```tcl
+do run.do
+```
+
+The waveform script adds the main required signals:
+
+- clock
+- reset
+- interrupt
+- input port
+- output port
+- `PC`
+- `SP`
+- flags
+- registers `R0` to `R7`
+
+## Hazard Handling
+
+- **Data hazards**: forwarding logic is implemented in `execute1.vhd`.
+- **Structural hazards**: the design uses one shared memory, so memory access
+  conflicts are handled through pipeline control in `hazard_unit.vhd`.
+- **Control hazards**: branches are resolved in Execute 2, and pipeline reset
+  signals are generated by `hazard_unit.vhd`.
+
+## Notes
+
+- The active instruction encoding uses 5-bit opcodes in bits `31 downto 27`.
+- The memory file should contain 4096 lines of 32-bit binary words.
+- The current sample `test.asm` mainly tests one-operand instructions. More
+  programs should be added for stack, memory, branch, call/return, interrupt,
+  and hazard testing.
