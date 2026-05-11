@@ -1,3 +1,4 @@
+import os
 import sys
 import re
 
@@ -77,7 +78,6 @@ def assemble_instruction(line, DATA_BASE):
         rd = REG[tokens[1]]
         if op == "INC":
             return code + rd + rd + "000000000000000000100"
-        elif op in ("PUSH","POP")
         elif op in ("IN", "POP"):
             return code + rd + "0" * 24
         else:
@@ -164,7 +164,7 @@ def assemble_program(lines):
 # ---------------- MAIN ----------------
 if __name__ == "__main__":
     asm_file = sys.argv[1]
-    out_file = asm_file.replace(".asm", ".mem")
+    out_file = os.path.splitext(asm_file)[0] + ".mem"
 
     with open(asm_file) as f:
         lines = f.readlines()

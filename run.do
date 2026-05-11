@@ -1,186 +1,44 @@
+vcom *.vhd
 vsim -gui work.processor
-add wave -position insertpoint  \
-sim:/processor/reset \
-sim:/processor/clk \
-sim:/processor/clk_enable \
-sim:/processor/rst_if_id \
-sim:/processor/rst_id_ex \
-sim:/processor/rst_ex_mem \
-sim:/processor/rst_mem_wb \
-sim:/processor/enable_if_id \
-sim:/processor/enable_id_ex \
-sim:/processor/enable_ex_mem \
-sim:/processor/enable_mem_wb \
-sim:/processor/excute_comp/exmem_decsp \
-sim:/processor/excute_comp/exmem_sp \
-sim:/processor/excute_comp/inc_sp_q \
-sim:/processor/excute_comp/inc_sp_q \
-sim:/processor/excute_comp/sp_inst/q \
-sim:/processor/instruction_if_id_in \
-sim:/processor/pc_if_id_in \
-sim:/processor/instruction_if_id_out \
-sim:/processor/readdata1_id_ex_in \
-sim:/processor/readdata2_id_ex_in \
-sim:/processor/readdata1_id_ex_out \
-sim:/processor/readdata2_id_ex_out \
-sim:/processor/alu_ex_mem_out
-add wave -position insertpoint  \
-sim:/processor/FetchMem_comp/memory/memory
-add wave -position insertpoint  \
-sim:/processor/FetchMem_comp/pc_component/d \
-sim:/processor/FetchMem_comp/pc_component/q
-add wave -position insertpoint  \
-sim:/processor/decode_comp/regfile/q_regs \
-sim:/processor/excute_comp/ccr_store/C_reg \
-sim:/processor/excute_comp/ccr_store/flag_enable \
-sim:/processor/excute_comp/ccr_store/N_reg \
-sim:/processor/excute_comp/ccr_store/Z_reg \
-sim:/processor/excute_comp/ccr_restore_q  \
-sim:/processor/excute_comp/input_z_ccr \
-sim:/processor/excute_comp/ccr_main/C_reg \
-sim:/processor/excute_comp/ccr_main/flag_enable \
-sim:/processor/excute_comp/ccr_main/N_reg \
-sim:/processor/excute_comp/ccr_main/Z_reg
-add wave -position insertpoint  \
-sim:/processor/alu_mem_wb_out
-add wave -position insertpoint  \
-sim:/processor/writeaddress1_mem_wb_out
-add wave -position insertpoint  \
-sim:/processor/mem_rb_writeaddress1
-add wave -position insertpoint  \
-sim:/processor/mem_rb_writedata1
-add wave -position insertpoint  \
-sim:/processor/mem_rb_regwrite1
-add wave -position insertpoint  \
-sim:/processor/mem_rb_regwrite2
-add wave -position insertpoint  \
-sim:/processor/decode_comp/regfile/writeaddress1 \
-sim:/processor/decode_comp/regfile/wenable1 \
-sim:/processor/decode_comp/regfile/writeport1
-add wave -position insertpoint  \
-sim:/processor/immediate_id_ex_in
-add wave -position insertpoint  \
-sim:/processor/excute_comp/branch_q
-add wave -position insertpoint  \
-sim:/processor/excute_comp/branch_type_q
-add wave -position insertpoint  \
-sim:/processor/FetchMem_comp/pc_plus_immediate \
-sim:/processor/FetchMem_comp/do_branch
-add wave -position insertpoint  \
-sim:/processor/FetchMem_comp/mem_address
-add wave -position insertpoint  \
-sim:/processor/FetchMem_comp/writedata
-add wave -position insertpoint  \
-sim:/processor/excute_comp/alu_a \
-sim:/processor/excute_comp/alu_b
-add wave -position insertpoint  \
-sim:/processor/excute_comp/alu_result
-add wave -position insertpoint  \
-sim:/processor/FetchMem_comp/alu_q
-add wave -position insertpoint  \
-sim:/processor/FetchMem_comp/sp_or_alu
-add wave -position insertpoint  \
-sim:/processor/FetchMem_comp/offset
-add wave -position insertpoint  \
-sim:/processor/decode_comp/mem_rb_regwrite1 \
-sim:/processor/decode_comp/mem_rb_regwrite2 \
-sim:/processor/decode_comp/mem_rb_writeaddress1 \
-sim:/processor/decode_comp/mem_rb_writeaddress2 \
-sim:/processor/decode_comp/mem_rb_writedata1 \
-sim:/processor/decode_comp/mem_rb_writedata2
-add wave -position insertpoint  \
-sim:/processor/write_back_comp/readData1_out \
-sim:/processor/write_back_comp/regWrite1_out \
-sim:/processor/write_back_comp/regWrite2_out \
-sim:/processor/write_back_comp/writeBack_out
-add wave -position insertpoint  \
-sim:/processor/write_back_comp/readData1_in \
-sim:/processor/write_back_comp/readData2_in \
-sim:/processor/FetchMem_comp/readdata \
-sim:/processor/FetchMem_comp/mem_address \
-sim:/processor/FetchMem_comp/memread_q \
-sim:/processor/FetchMem_comp/pc_src_q \
-sim:/processor/FetchMem_comp/pc_component/enable \
-sim:/processor/FetchMem_comp/pc_component_d \
-sim:/processor/FetchMem_comp/pc_component/q \
-sim:/processor/FetchMem_comp/pc_component/d \
-sim:/processor/write_back_comp/writeAddress1_in \
-sim:/processor/write_back_comp/writeAddress2_in 
-add wave -position insertpoint  \
-sim:/processor/input_port \
-sim:/processor/output_port \
-sim:/processor/decode_comp/hlt_signal
+
+# ── Clock & Control ──────────────────────────────────────────
+add wave -divider "Control"
+add wave -label "CLK"       sim:/processor/clk
+add wave -label "Reset"     sim:/processor/reset
+add wave -label "Interrupt" sim:/processor/interrupt
+
+# ── I/O Ports ────────────────────────────────────────────────
+add wave -divider "I/O"
+add wave -label "IN.PORT"   -radix hex sim:/processor/input_port
+add wave -label "OUT.PORT"  -radix hex sim:/processor/output_port
+
+# ── Special Registers ────────────────────────────────────────
+add wave -divider "Special Registers"
+add wave -label "PC"        -radix hex sim:/processor/FetchMem_comp/pc_component/q
+add wave -label "SP"        -radix hex sim:/processor/excute_comp/sp_inst/q
+
+# ── Flags (CCR) ──────────────────────────────────────────────
+add wave -divider "Flags"
+add wave -label "Z (Zero)"     sim:/processor/excute_comp/ccr_main/Z_reg
+add wave -label "N (Negative)" sim:/processor/excute_comp/ccr_main/N_reg
+add wave -label "C (Carry)"    sim:/processor/excute_comp/ccr_main/C_reg
+
+# ── General Purpose Registers R0-R7 ──────────────────────────
+add wave -divider "Registers"
+add wave -label "R0" -radix hex sim:/processor/decode_comp/regfile/q_regs(0)
+add wave -label "R1" -radix hex sim:/processor/decode_comp/regfile/q_regs(1)
+add wave -label "R2" -radix hex sim:/processor/decode_comp/regfile/q_regs(2)
+add wave -label "R3" -radix hex sim:/processor/decode_comp/regfile/q_regs(3)
+add wave -label "R4" -radix hex sim:/processor/decode_comp/regfile/q_regs(4)
+add wave -label "R5" -radix hex sim:/processor/decode_comp/regfile/q_regs(5)
+add wave -label "R6" -radix hex sim:/processor/decode_comp/regfile/q_regs(6)
+add wave -label "R7" -radix hex sim:/processor/decode_comp/regfile/q_regs(7)
+
+# ── Simulation ───────────────────────────────────────────────
 force -freeze sim:/processor/reset 1 0
 force -freeze sim:/processor/clk_input 1 0, 0 {50 ps} -r 100
 run
-force -freeze sim:/processor/reset 0 0
-force -freeze sim:/processor/input_port x\"00000030\" 0
-run
-force -freeze sim:/processor/input_port x\"00000050\" 0
-run
-force -freeze sim:/processor/input_port x\"00000100\" 0
-run
-force -freeze sim:/processor/input_port x\"00000300\" 0
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-force -freeze sim:/processor/input_port x\"00000070\" 0
 
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
-run
+force -freeze sim:/processor/reset 0 0
+force -freeze sim:/processor/input_port x"00000030" 0
+run 7000
