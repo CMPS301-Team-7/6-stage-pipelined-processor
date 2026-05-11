@@ -33,9 +33,6 @@ entity execute2 is
         branch_q        : in std_logic;
         branch_type_q   : in std_logic_vector(1 downto 0);
         ex1_interrupt_signal : in std_logic;
-        predicted_taken_q : in std_logic;
-        predicted_target_q : in std_logic_vector(31 downto 0);
-        fetch_pc_q : in std_logic_vector(31 downto 0);
 
         -- flags forwarded from EX1's CCR (combinational, same cycle)
         Z_flag : in std_logic;
@@ -67,10 +64,6 @@ entity execute2 is
         -- branch resolution outputs (go directly to fetch/PC, not stored in register)
         do_branch       : out std_logic;
         branch_target   : out std_logic_vector(31 downto 0);
-        branch_mispredict : out std_logic;
-        branch_correct_pc : out std_logic_vector(31 downto 0);
-        predictor_update : out std_logic;
-        predictor_actual_taken : out std_logic;
 
         ex2_interrupt_signal : out std_logic
     );
@@ -79,7 +72,6 @@ end execute2;
 architecture exec2 of execute2 is
     signal branchtype      : std_logic;
     signal do_branch_sig   : std_logic;
-    signal mispredict_sig  : std_logic;
     -- effective address = ALU result (Rsrc already computed in EX1) + offset
     -- Note: for LDD/STD the ALU in EX1 computes Rsrc; we add the sign-extended
     -- immediate (offset) here to form the final memory address.
@@ -106,9 +98,6 @@ begin
     -- (absolute jump) as assembled by the control unit / assembler.
     -- ============================================================
     branch_target <= immediate_q;
-    branch_correct_pc <= immediate_q when do_branch_sig = '1' else pc1_q;
-    predictor_update <= branch_q;
-    predictor_actual_taken <= do_branch_sig;
 
     -- ============================================================
     -- Branch decision
@@ -126,10 +115,6 @@ begin
 
     do_branch_sig <= branchtype and branch_q;
     do_branch     <= do_branch_sig;
-    mispredict_sig <= branch_q when predicted_taken_q /= do_branch_sig else
-                      '1' when branch_q = '1' and do_branch_sig = '1' and predicted_target_q /= immediate_q else
-                      '0';
-    branch_mispredict <= mispredict_sig;
 
     -- ============================================================
     -- Pass-through to EX/MEM register

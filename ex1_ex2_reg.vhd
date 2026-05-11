@@ -57,13 +57,7 @@ entity ex1_ex2_reg is
         branch_type_d   : in  std_logic_vector(1 downto 0);
         branch_type_q   : out std_logic_vector(1 downto 0);
         interrupt_signal_d : in  std_logic;
-        interrupt_signal_q : out std_logic;
-        predicted_taken_d  : in  std_logic;
-        predicted_taken_q  : out std_logic;
-        predicted_target_d : in  std_logic_vector(31 downto 0);
-        predicted_target_q : out std_logic_vector(31 downto 0);
-        fetch_pc_d         : in  std_logic_vector(31 downto 0);
-        fetch_pc_q         : out std_logic_vector(31 downto 0)
+        interrupt_signal_q : out std_logic
     );
 end ex1_ex2_reg;
 
@@ -95,9 +89,6 @@ begin
             branch_q        <= '0';
             branch_type_q   <= (others => '0');
             interrupt_signal_q <= '0';
-            predicted_taken_q <= '0';
-            predicted_target_q <= (others => '0');
-            fetch_pc_q <= (others => '0');
         elsif clk'event and clk = '1' and enable = '1' then
             sp_q            <= sp_d;
             pc1_q           <= pc1_d;
@@ -122,9 +113,6 @@ begin
             branch_q        <= branch_d;
             branch_type_q   <= branch_type_d;
             interrupt_signal_q <= interrupt_signal_d;
-            predicted_taken_q <= predicted_taken_d;
-            predicted_target_q <= predicted_target_d;
-            fetch_pc_q <= fetch_pc_d;
         end if;
     end process;
 end dff;

@@ -64,9 +64,6 @@ entity execute1 is
         mem_wb_readdata1    : in std_logic_vector(31 downto 0);
         -- interrupt pass-through
         id_ex_interrupt_signal : in std_logic;
-        predicted_taken_q : in std_logic;
-        predicted_target_q : in std_logic_vector(31 downto 0);
-        fetch_pc_q : in std_logic_vector(31 downto 0);
 
         -- ---- outputs to EX1/EX2 register ----
         sp_d            : out std_logic_vector(31 downto 0);
@@ -92,9 +89,6 @@ entity execute1 is
         branch_type_d   : out std_logic_vector(1 downto 0);
         immediate_d     : out std_logic_vector(31 downto 0);  -- needed by EX2 for address calc
         ex1_interrupt_signal : out std_logic;
-        predicted_taken_d : out std_logic;
-        predicted_target_d : out std_logic_vector(31 downto 0);
-        fetch_pc_d : out std_logic_vector(31 downto 0);
 
         -- Flags output
         Z_flag : out std_logic;
@@ -360,9 +354,6 @@ begin
     -- pass immediate so EX2 can compute LDD/STD effective address
     immediate_d     <= immediate_q;
     ex1_interrupt_signal <= id_ex_interrupt_signal;
-    predicted_taken_d <= predicted_taken_q;
-    predicted_target_d <= predicted_target_q;
-    fetch_pc_d <= fetch_pc_q;
     
     -- Flags outputs
     Z_flag <= Z_reg;
