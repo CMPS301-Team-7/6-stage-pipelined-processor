@@ -149,7 +149,7 @@ begin
     sp_or_alu <= sp_q when mem_add_src_q = '1' else alu_q;
 
     mem_address <= std_logic_vector(
-        (unsigned(offset) + unsigned(sp_or_alu)) mod (2**20)
+        (unsigned(offset) + unsigned(sp_or_alu)) mod (2**12)
     );
     -- setting the output to mem/wb reg
     memory_d <= readdata;

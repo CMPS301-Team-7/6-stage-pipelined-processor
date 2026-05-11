@@ -15,13 +15,13 @@ add wave -label "OUT.PORT"  -radix hex sim:/processor/output_port
 # ── Special Registers ────────────────────────────────────────
 add wave -divider "Special Registers"
 add wave -label "PC"        -radix hex sim:/processor/FetchMem_comp/pc_component/q
-add wave -label "SP"        -radix hex sim:/processor/excute_comp/sp_inst/q
+add wave -label "SP"        -radix hex sim:/processor/ex1_comp/sp_inst/q
 
 # ── Flags (CCR) ──────────────────────────────────────────────
 add wave -divider "Flags"
-add wave -label "Z (Zero)"     sim:/processor/excute_comp/ccr_main/Z_reg
-add wave -label "N (Negative)" sim:/processor/excute_comp/ccr_main/N_reg
-add wave -label "C (Carry)"    sim:/processor/excute_comp/ccr_main/C_reg
+add wave -label "Z (Zero)"     sim:/processor/ex1_comp/ccr_main/Z_reg
+add wave -label "N (Negative)" sim:/processor/ex1_comp/ccr_main/N_reg
+add wave -label "C (Carry)"    sim:/processor/ex1_comp/ccr_main/C_reg
 
 # ── General Purpose Registers R0-R7 ──────────────────────────
 add wave -divider "Registers"
@@ -41,4 +41,4 @@ run
 
 force -freeze sim:/processor/reset 0 0
 force -freeze sim:/processor/input_port x"00000030" 0
-run 7000
+run 5000
