@@ -1,3 +1,4 @@
+import os
 import sys
 import re
 
@@ -77,8 +78,11 @@ def assemble_instruction(line, DATA_BASE):
         rd = REG[tokens[1]]
         if op == "INC":
             return code + rd + rd + "000000000000000000100"
+<<<<<<< HEAD
         elif op == "PUSH":
             return code + "000000" + rd + "0" * 18
+=======
+>>>>>>> origin/main
         elif op in ("IN", "POP"):
             return code + rd + "0" * 24
         else:
@@ -154,7 +158,11 @@ def assemble_program(lines):
         memory[current_address] = mc
         current_address += 1
 
+<<<<<<< HEAD
     MEMORY_SIZE = 4096
+=======
+    MEMORY_SIZE = 1000
+>>>>>>> origin/main
     output = [memory.get(addr, "0" * 32) for addr in range(MEMORY_SIZE)]
 
     print(f"Instruction memory ends at: 0x{LAST_INSTR:X}")
@@ -165,7 +173,7 @@ def assemble_program(lines):
 # ---------------- MAIN ----------------
 if __name__ == "__main__":
     asm_file = sys.argv[1]
-    out_file = asm_file.replace(".asm", ".mem")
+    out_file = os.path.splitext(asm_file)[0] + ".mem"
 
     with open(asm_file) as f:
         lines = f.readlines()

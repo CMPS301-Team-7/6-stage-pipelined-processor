@@ -113,94 +113,191 @@ component decode is
     );
 end component;
 
-component execute is 
+component execute1 is
     port(
-        clk,rst: in std_logic; 
-        --output of register id/ex
-        immediate_q: in std_logic_vector(31 downto 0);
-        pc1_q: in std_logic_vector(31 downto 0);
-        inputport_q:in std_logic_vector(31 downto 0);
-        readdata1_q:in std_logic_vector(31 downto 0);
-        readdata2_q:in std_logic_vector(31 downto 0);
-        writeaddress1_q:in std_logic_vector(2 downto 0);
-        writeaddress2_q:in std_logic_vector(2 downto 0);
-        memtoreg_q: in std_logic;
-        outputenable_q: in std_logic;
-        regwrite1_q: in std_logic;
-        regwrite2_q: in std_logic;
-        inputenable_q:in std_logic;
-        memwrite_q:in std_logic;
-        memread_q:in std_logic;
-        mem_add_src_q: in std_logic;
-        mem_data_src_q: in std_logic;
-        sp_dec_q: in std_logic; --meen da??? ha pass it for now then nebaa neshouf
-        pc_src_q: in std_logic;
-        alu_control_q: in std_logic_vector(2 downto 0);
-        alu_src_q: in std_logic;
-        branch_q: in std_logic;
-        branch_type_q: in std_logic_vector(1 downto 0);
-        inc_sp_q: in std_logic;
-        set_carry_q: in std_logic;
-        ccr_store_q: in std_logic;
-        ccr_restore_q: in std_logic;
-        flag_enable_q: in std_logic;
-        --outputs of mem el  2 lines ely dakhleen lel sp men odam
-        exmem_sp: in std_logic_vector(31 downto 0);
-        exmem_decsp: in std_logic;
-        --inputs of ex/mem
-       
-        sp_d: out std_logic_vector(31 downto 0);
-        pc1_d: out std_logic_vector(31 downto 0);
-        alu_d:out std_logic_vector(31 downto 0);
-        inputport_d:out std_logic_vector(31 downto 0);
-        readdata1_d:out std_logic_vector(31 downto 0);
-        readdata2_d:out std_logic_vector(31 downto 0);
-        writeaddress1_d: out std_logic_vector(2 downto 0);
-        writeaddress2_d: out std_logic_vector(2 downto 0);
-        memtoreg_d:out std_logic;
-        outputenable_d:out std_logic;
-        regwrite1_d:out std_logic;
-        regwrite2_d:out std_logic;
-        inputenable_d:out std_logic;
-        memwrite_d:out std_logic;
-        memread_d:out std_logic;
-        mem_add_src_d: out std_logic;
-        mem_data_src_d: out std_logic;
-        sp_dec_d: out std_logic; 
-        pc_src_d: out std_logic;
-
-        --adder ely fo2
-        pc_plus1_plus_sign_extend: out std_logic_vector(31 downto 0);
-
-        --branch 
-        do_branch: out std_logic;
-        ---- forwarding input from the register------
-        rs_q: in std_logic_vector(2 downto 0);
-        rt_q: in std_logic_vector(2 downto 0);
-
-        -------- info form ex/mem ------------------
-        ex_mem_regwrite1: in std_logic;
-        ex_mem_regwrite2: in std_logic;
-        ex_mem_writeaddress1:in std_logic_vector(2 downto 0);
-        ex_mem_writeaddress2: in std_logic_vector(2 downto 0);
-        ex_mem_alu_output: in std_logic_vector(31 downto 0);
-        ex_mem_readdata1: in std_logic_vector(31 downto 0);
-        ex_mem_readdata2: in std_logic_vector(31 downto 0);
-        ex_mem_inputport, ex_mem_memory_readdate: in std_logic_vector(31 downto 0);
-        ex_mem_memtoreg,ex_mem_input_enable: in std_logic;
-
-        -------- info from mem/wb -------------------
-        mem_wb_regwrite1: in std_logic;
-        mem_wb_regwrite2: in std_logic;
+        clk, rst : in std_logic;
+        immediate_q     : in std_logic_vector(31 downto 0);
+        pc1_q           : in std_logic_vector(31 downto 0);
+        inputport_q     : in std_logic_vector(31 downto 0);
+        readdata1_q     : in std_logic_vector(31 downto 0);
+        readdata2_q     : in std_logic_vector(31 downto 0);
+        writeaddress1_q : in std_logic_vector(2 downto 0);
+        writeaddress2_q : in std_logic_vector(2 downto 0);
+        memtoreg_q      : in std_logic;
+        outputenable_q  : in std_logic;
+        regwrite1_q     : in std_logic;
+        regwrite2_q     : in std_logic;
+        inputenable_q   : in std_logic;
+        memwrite_q      : in std_logic;
+        memread_q       : in std_logic;
+        mem_add_src_q   : in std_logic;
+        mem_data_src_q  : in std_logic;
+        sp_dec_q        : in std_logic;
+        pc_src_q        : in std_logic;
+        alu_control_q   : in std_logic_vector(2 downto 0);
+        alu_src_q       : in std_logic;
+        branch_q        : in std_logic;
+        branch_type_q   : in std_logic_vector(1 downto 0);
+        inc_sp_q        : in std_logic;
+        set_carry_q     : in std_logic;
+        ccr_store_q     : in std_logic;
+        ccr_restore_q   : in std_logic;
+        flag_enable_q   : in std_logic;
+        exmem_sp        : in std_logic_vector(31 downto 0);
+        exmem_decsp     : in std_logic;
+        rs_q            : in std_logic_vector(2 downto 0);
+        rt_q            : in std_logic_vector(2 downto 0);
+        ex_mem_regwrite1       : in std_logic;
+        ex_mem_regwrite2       : in std_logic;
+        ex_mem_writeaddress1   : in std_logic_vector(2 downto 0);
+        ex_mem_writeaddress2   : in std_logic_vector(2 downto 0);
+        ex_mem_alu_output      : in std_logic_vector(31 downto 0);
+        ex_mem_readdata1       : in std_logic_vector(31 downto 0);
+        ex_mem_readdata2       : in std_logic_vector(31 downto 0);
+        ex_mem_inputport       : in std_logic_vector(31 downto 0);
+        ex_mem_memory_readdate : in std_logic_vector(31 downto 0);
+        ex_mem_memtoreg        : in std_logic;
+        ex_mem_input_enable    : in std_logic;
+        mem_wb_regwrite1    : in std_logic;
+        mem_wb_regwrite2    : in std_logic;
         mem_wb_writeaddress1: in std_logic_vector(2 downto 0);
-        mem_wb_writeaddress2:in std_logic_vector(2 downto 0);
-        mem_wb_writedata: in std_logic_vector(31 downto 0);
-        mem_wb_readdata1:in std_logic_vector(31 downto 0);
-        id_ex_interrupt_signal: in std_logic;
-        ex_mem_interrupt_signal: out std_logic
+        mem_wb_writeaddress2: in std_logic_vector(2 downto 0);
+        mem_wb_writedata    : in std_logic_vector(31 downto 0);
+        mem_wb_readdata1    : in std_logic_vector(31 downto 0);
+        id_ex_interrupt_signal : in std_logic;
+        sp_d            : out std_logic_vector(31 downto 0);
+        pc1_d           : out std_logic_vector(31 downto 0);
+        alu_d           : out std_logic_vector(31 downto 0);
+        inputport_d     : out std_logic_vector(31 downto 0);
+        readdata1_d     : out std_logic_vector(31 downto 0);
+        readdata2_d     : out std_logic_vector(31 downto 0);
+        writeaddress1_d : out std_logic_vector(2 downto 0);
+        writeaddress2_d : out std_logic_vector(2 downto 0);
+        memtoreg_d      : out std_logic;
+        outputenable_d  : out std_logic;
+        regwrite1_d     : out std_logic;
+        regwrite2_d     : out std_logic;
+        inputenable_d   : out std_logic;
+        memwrite_d      : out std_logic;
+        memread_d       : out std_logic;
+        mem_add_src_d   : out std_logic;
+        mem_data_src_d  : out std_logic;
+        sp_dec_d        : out std_logic;
+        pc_src_d        : out std_logic;
+        branch_d        : out std_logic;
+        branch_type_d   : out std_logic_vector(1 downto 0);
+        immediate_d     : out std_logic_vector(31 downto 0);
+        ex1_interrupt_signal : out std_logic;
+        Z_flag : out std_logic;
+        N_flag : out std_logic;
+        C_flag : out std_logic
+    );
+end component;
 
-        );
+component ex1_ex2_reg is
+    port(
+        clk, rst, enable : in std_logic;
+        sp_d            : in  std_logic_vector(31 downto 0);
+        sp_q            : out std_logic_vector(31 downto 0);
+        pc1_d           : in  std_logic_vector(31 downto 0);
+        pc1_q           : out std_logic_vector(31 downto 0);
+        alu_d           : in  std_logic_vector(31 downto 0);
+        alu_q           : out std_logic_vector(31 downto 0);
+        inputport_d     : in  std_logic_vector(31 downto 0);
+        inputport_q     : out std_logic_vector(31 downto 0);
+        readdata1_d     : in  std_logic_vector(31 downto 0);
+        readdata1_q     : out std_logic_vector(31 downto 0);
+        readdata2_d     : in  std_logic_vector(31 downto 0);
+        readdata2_q     : out std_logic_vector(31 downto 0);
+        immediate_d     : in  std_logic_vector(31 downto 0);
+        immediate_q     : out std_logic_vector(31 downto 0);
+        writeaddress1_d : in  std_logic_vector(2 downto 0);
+        writeaddress1_q : out std_logic_vector(2 downto 0);
+        writeaddress2_d : in  std_logic_vector(2 downto 0);
+        writeaddress2_q : out std_logic_vector(2 downto 0);
+        memtoreg_d      : in  std_logic;
+        memtoreg_q      : out std_logic;
+        outputenable_d  : in  std_logic;
+        outputenable_q  : out std_logic;
+        regwrite1_d     : in  std_logic;
+        regwrite1_q     : out std_logic;
+        regwrite2_d     : in  std_logic;
+        regwrite2_q     : out std_logic;
+        inputenable_d   : in  std_logic;
+        inputenable_q   : out std_logic;
+        memwrite_d      : in  std_logic;
+        memwrite_q      : out std_logic;
+        memread_d       : in  std_logic;
+        memread_q       : out std_logic;
+        mem_add_src_d   : in  std_logic;
+        mem_add_src_q   : out std_logic;
+        mem_data_src_d  : in  std_logic;
+        mem_data_src_q  : out std_logic;
+        sp_dec_d        : in  std_logic;
+        sp_dec_q        : out std_logic;
+        pc_src_d        : in  std_logic;
+        pc_src_q        : out std_logic;
+        branch_d        : in  std_logic;
+        branch_q        : out std_logic;
+        branch_type_d   : in  std_logic_vector(1 downto 0);
+        branch_type_q   : out std_logic_vector(1 downto 0);
+        interrupt_signal_d : in  std_logic;
+        interrupt_signal_q : out std_logic
+    );
+end component;
 
+component execute2 is
+    port(
+        sp_q            : in std_logic_vector(31 downto 0);
+        pc1_q           : in std_logic_vector(31 downto 0);
+        alu_q           : in std_logic_vector(31 downto 0);
+        inputport_q     : in std_logic_vector(31 downto 0);
+        readdata1_q     : in std_logic_vector(31 downto 0);
+        readdata2_q     : in std_logic_vector(31 downto 0);
+        immediate_q     : in std_logic_vector(31 downto 0);
+        writeaddress1_q : in std_logic_vector(2 downto 0);
+        writeaddress2_q : in std_logic_vector(2 downto 0);
+        memtoreg_q      : in std_logic;
+        outputenable_q  : in std_logic;
+        regwrite1_q     : in std_logic;
+        regwrite2_q     : in std_logic;
+        inputenable_q   : in std_logic;
+        memwrite_q      : in std_logic;
+        memread_q       : in std_logic;
+        mem_add_src_q   : in std_logic;
+        mem_data_src_q  : in std_logic;
+        sp_dec_q        : in std_logic;
+        pc_src_q        : in std_logic;
+        branch_q        : in std_logic;
+        branch_type_q   : in std_logic_vector(1 downto 0);
+        ex1_interrupt_signal : in std_logic;
+        Z_flag : in std_logic;
+        N_flag : in std_logic;
+        C_flag : in std_logic;
+        sp_d            : out std_logic_vector(31 downto 0);
+        pc1_d           : out std_logic_vector(31 downto 0);
+        alu_d           : out std_logic_vector(31 downto 0);
+        mem_addr_d      : out std_logic_vector(31 downto 0);
+        inputport_d     : out std_logic_vector(31 downto 0);
+        readdata1_d     : out std_logic_vector(31 downto 0);
+        readdata2_d     : out std_logic_vector(31 downto 0);
+        writeaddress1_d : out std_logic_vector(2 downto 0);
+        writeaddress2_d : out std_logic_vector(2 downto 0);
+        memtoreg_d      : out std_logic;
+        outputenable_d  : out std_logic;
+        regwrite1_d     : out std_logic;
+        regwrite2_d     : out std_logic;
+        inputenable_d   : out std_logic;
+        memwrite_d      : out std_logic;
+        memread_d       : out std_logic;
+        mem_add_src_d   : out std_logic;
+        mem_data_src_d  : out std_logic;
+        sp_dec_d        : out std_logic;
+        pc_src_d        : out std_logic;
+        do_branch       : out std_logic;
+        branch_target   : out std_logic_vector(31 downto 0);
+        ex2_interrupt_signal : out std_logic
+    );
 end component;
 
 component writeBack is
@@ -414,8 +511,6 @@ end component;
 signal pc_plus_immediate : std_logic_vector(31 downto 0);
 signal do_branch : std_logic;
 signal pc_enable : std_logic;
-signal rst_if_id, rst_id_ex, rst_ex_mem, rst_mem_wb : std_logic;
-signal enable_if_id, enable_id_ex, enable_ex_mem, enable_mem_wb : std_logic;
 signal instruction_if_id_in, input_port_if_id_in : std_logic_vector(31 downto 0);
 signal pc_if_id_in : std_logic_vector(31 downto 0);
 
@@ -441,6 +536,39 @@ signal memread_id_ex_out, mem_add_src_id_ex_out, mem_data_src_id_ex_out, sp_dec_
 signal alu_control_id_ex_out : std_logic_vector(2 downto 0);
 signal branch_type_id_ex_out : std_logic_vector(1 downto 0);
 signal alu_src_id_ex_out, branch_id_ex_out, inc_sp_id_ex_out, set_carry_id_ex_out, ccr_store_id_ex_out, ccr_restore_id_ex_out, flag_enable_id_ex_out : std_logic;
+-- EX1 outputs -> EX1/EX2 register inputs
+signal sp_ex1_ex2_in, pc1_ex1_ex2_in, alu_ex1_ex2_in         : std_logic_vector(31 downto 0);
+signal inputport_ex1_ex2_in, readdata1_ex1_ex2_in             : std_logic_vector(31 downto 0);
+signal readdata2_ex1_ex2_in, immediate_ex1_ex2_in             : std_logic_vector(31 downto 0);
+signal writeaddress1_ex1_ex2_in, writeaddress2_ex1_ex2_in     : std_logic_vector(2 downto 0);
+signal memtoreg_ex1_ex2_in, outputenable_ex1_ex2_in           : std_logic;
+signal regwrite1_ex1_ex2_in, regwrite2_ex1_ex2_in             : std_logic;
+signal inputenable_ex1_ex2_in, memwrite_ex1_ex2_in            : std_logic;
+signal memread_ex1_ex2_in, mem_add_src_ex1_ex2_in             : std_logic;
+signal mem_data_src_ex1_ex2_in, sp_dec_ex1_ex2_in             : std_logic;
+signal pc_src_ex1_ex2_in, branch_ex1_ex2_in                   : std_logic;
+signal branch_type_ex1_ex2_in                                 : std_logic_vector(1 downto 0);
+signal interrupt_ex1_ex2_in                                   : std_logic;
+
+-- EX1/EX2 register outputs -> EX2 inputs
+signal sp_ex1_ex2_out, pc1_ex1_ex2_out, alu_ex1_ex2_out       : std_logic_vector(31 downto 0);
+signal inputport_ex1_ex2_out, readdata1_ex1_ex2_out           : std_logic_vector(31 downto 0);
+signal readdata2_ex1_ex2_out, immediate_ex1_ex2_out           : std_logic_vector(31 downto 0);
+signal writeaddress1_ex1_ex2_out, writeaddress2_ex1_ex2_out   : std_logic_vector(2 downto 0);
+signal memtoreg_ex1_ex2_out, outputenable_ex1_ex2_out         : std_logic;
+signal regwrite1_ex1_ex2_out, regwrite2_ex1_ex2_out           : std_logic;
+signal inputenable_ex1_ex2_out, memwrite_ex1_ex2_out          : std_logic;
+signal memread_ex1_ex2_out, mem_add_src_ex1_ex2_out           : std_logic;
+signal mem_data_src_ex1_ex2_out, sp_dec_ex1_ex2_out           : std_logic;
+signal pc_src_ex1_ex2_out, branch_ex1_ex2_out                 : std_logic;
+signal branch_type_ex1_ex2_out                                : std_logic_vector(1 downto 0);
+signal interrupt_ex1_ex2_out                                  : std_logic;
+
+-- flags from EX1 CCR -> EX2
+signal ex1_Z_flag, ex1_N_flag, ex1_C_flag : std_logic;
+
+-- EX2 extra output
+signal mem_addr_ex2_out : std_logic_vector(31 downto 0);
 ---- forward signals----------
 signal rs_id_ex_in,rt_id_ex_in: std_logic_vector(2 downto 0);
 signal rs_id_ex_out:std_logic_vector(2 downto 0);
@@ -508,10 +636,16 @@ signal interrupt_signal_id_ex_in, interrupt_signal_ex_mem_in : std_logic;
 signal interrupt_signal_ex_mem_out,interupt_signal_id_ex_out : std_logic;
 signal int_signal,index: std_logic;
 signal int_signal_id_ex_out: std_logic;
+
+signal rst_if_id, rst_id_ex, rst_ex1_ex2, rst_ex_mem, rst_mem_wb : std_logic;
+signal enable_if_id, enable_id_ex, enable_ex1_ex2, enable_ex_mem, enable_mem_wb : std_logic;
 begin
 
 clk <= '0' when hlt_signal = '1'
 else clk_input;
+
+rst_ex1_ex2    <= rst_ex_mem;
+enable_ex1_ex2 <= enable_ex_mem;
 
 FetchMem_comp: fetch_mem 
 port map(
@@ -720,93 +854,191 @@ id_ex_comp: id_ex_reg
     );
 
 
-excute_comp: execute 
+ex1_comp: execute1
     port map(
         clk => clk,
-        rst => reset, 
-        --output of register id/ex
-        immediate_q => immediate_id_ex_out,
-        pc1_q => pc1_id_ex_out,
-        inputport_q => inputport_id_ex_out,
-        readdata1_q => readdata1_id_ex_out,
-        readdata2_q => readdata2_id_ex_out,
+        rst => reset,
+        immediate_q     => immediate_id_ex_out,
+        pc1_q           => pc1_id_ex_out,
+        inputport_q     => inputport_id_ex_out,
+        readdata1_q     => readdata1_id_ex_out,
+        readdata2_q     => readdata2_id_ex_out,
         writeaddress1_q => writeaddress1_id_ex_out,
         writeaddress2_q => writeaddress2_id_ex_out,
-        memtoreg_q => memtoreg_id_ex_out,
-        outputenable_q => outputenable_id_ex_out,
-        regwrite1_q => regwrite1_id_ex_out,
-        regwrite2_q => regwrite2_id_ex_out,
-        inputenable_q => inputenable_id_ex_out,
-        memwrite_q => memwrite_id_ex_out,
-        memread_q => memread_id_ex_out,
-        mem_add_src_q => mem_add_src_id_ex_out,
-        mem_data_src_q => mem_data_src_id_ex_out,
-        sp_dec_q => sp_dec_id_ex_out, --meen da??? ha pass it for now then nebaa neshouf
-        pc_src_q => pc_src_id_ex_out,
-        alu_control_q => alu_control_id_ex_out,
-        alu_src_q => alu_src_id_ex_out,
-        branch_q  => branch_id_ex_out,
-        branch_type_q => branch_type_id_ex_out,
-        inc_sp_q => inc_sp_id_ex_out,
-        set_carry_q => set_carry_id_ex_out,
-        ccr_store_q => ccr_store_id_ex_out,
-        ccr_restore_q => ccr_restore_id_ex_out,
-        flag_enable_q => flag_enable_id_ex_out,
-        --outputs of mem el  2 lines ely dakhleen lel sp men odam
-        exmem_sp => exmem_sp,
-        exmem_decsp => exmem_decsp,
-        --inputs of ex/mem
-       
-        sp_d => sp_ex_mem_in,
-        pc1_d => pc1_ex_mem_in,
-        alu_d => alu_ex_mem_in,
-        inputport_d => inputport_ex_mem_in,
-        readdata1_d => readdata1_ex_mem_in,
-        readdata2_d => readdata2_ex_mem_in,
+        memtoreg_q      => memtoreg_id_ex_out,
+        outputenable_q  => outputenable_id_ex_out,
+        regwrite1_q     => regwrite1_id_ex_out,
+        regwrite2_q     => regwrite2_id_ex_out,
+        inputenable_q   => inputenable_id_ex_out,
+        memwrite_q      => memwrite_id_ex_out,
+        memread_q       => memread_id_ex_out,
+        mem_add_src_q   => mem_add_src_id_ex_out,
+        mem_data_src_q  => mem_data_src_id_ex_out,
+        sp_dec_q        => sp_dec_id_ex_out,
+        pc_src_q        => pc_src_id_ex_out,
+        alu_control_q   => alu_control_id_ex_out,
+        alu_src_q       => alu_src_id_ex_out,
+        branch_q        => branch_id_ex_out,
+        branch_type_q   => branch_type_id_ex_out,
+        inc_sp_q        => inc_sp_id_ex_out,
+        set_carry_q     => set_carry_id_ex_out,
+        ccr_store_q     => ccr_store_id_ex_out,
+        ccr_restore_q   => ccr_restore_id_ex_out,
+        flag_enable_q   => flag_enable_id_ex_out,
+        exmem_sp        => exmem_sp,
+        exmem_decsp     => exmem_decsp,
+        rs_q            => rs_id_ex_out,
+        rt_q            => rt_id_ex_out,
+        ex_mem_regwrite1       => regwrite1_ex_mem_out,
+        ex_mem_regwrite2       => regwrite2_ex_mem_out,
+        ex_mem_writeaddress1   => writeaddress1_ex_mem_out,
+        ex_mem_writeaddress2   => writeaddress2_ex_mem_out,
+        ex_mem_alu_output      => alu_ex_mem_out,
+        ex_mem_readdata1       => readdata1_ex_mem_out,
+        ex_mem_readdata2       => readdata2_ex_mem_out,
+        ex_mem_inputport       => inputport_ex_mem_out,
+        ex_mem_memory_readdate => memory_mem_wb_in,
+        ex_mem_memtoreg        => memtoreg_ex_mem_out,
+        ex_mem_input_enable    => inputenable_ex_mem_out,
+        mem_wb_regwrite1    => regwrite1_mem_wb_out,
+        mem_wb_regwrite2    => regwrite2_mem_wb_out,
+        mem_wb_writeaddress1 => writeaddress1_mem_wb_out,
+        mem_wb_writeaddress2 => writeaddress2_mem_wb_out,
+        mem_wb_writedata    => mem_rb_writedata1,
+        mem_wb_readdata1    => readdata1_mem_wb_out,
+        id_ex_interrupt_signal => interupt_signal_id_ex_out,
+        sp_d            => sp_ex1_ex2_in,
+        pc1_d           => pc1_ex1_ex2_in,
+        alu_d           => alu_ex1_ex2_in,
+        inputport_d     => inputport_ex1_ex2_in,
+        readdata1_d     => readdata1_ex1_ex2_in,
+        readdata2_d     => readdata2_ex1_ex2_in,
+        writeaddress1_d => writeaddress1_ex1_ex2_in,
+        writeaddress2_d => writeaddress2_ex1_ex2_in,
+        memtoreg_d      => memtoreg_ex1_ex2_in,
+        outputenable_d  => outputenable_ex1_ex2_in,
+        regwrite1_d     => regwrite1_ex1_ex2_in,
+        regwrite2_d     => regwrite2_ex1_ex2_in,
+        inputenable_d   => inputenable_ex1_ex2_in,
+        memwrite_d      => memwrite_ex1_ex2_in,
+        memread_d       => memread_ex1_ex2_in,
+        mem_add_src_d   => mem_add_src_ex1_ex2_in,
+        mem_data_src_d  => mem_data_src_ex1_ex2_in,
+        sp_dec_d        => sp_dec_ex1_ex2_in,
+        pc_src_d        => pc_src_ex1_ex2_in,
+        branch_d        => branch_ex1_ex2_in,
+        branch_type_d   => branch_type_ex1_ex2_in,
+        immediate_d     => immediate_ex1_ex2_in,
+        ex1_interrupt_signal => interrupt_ex1_ex2_in,
+        Z_flag          => ex1_Z_flag,
+        N_flag          => ex1_N_flag,
+        C_flag          => ex1_C_flag
+    );
+
+ex1_ex2_reg_comp: ex1_ex2_reg
+    port map(
+        clk    => clk,
+        rst    => rst_ex1_ex2,
+        enable => enable_ex1_ex2,
+        sp_d            => sp_ex1_ex2_in,
+        sp_q            => sp_ex1_ex2_out,
+        pc1_d           => pc1_ex1_ex2_in,
+        pc1_q           => pc1_ex1_ex2_out,
+        alu_d           => alu_ex1_ex2_in,
+        alu_q           => alu_ex1_ex2_out,
+        inputport_d     => inputport_ex1_ex2_in,
+        inputport_q     => inputport_ex1_ex2_out,
+        readdata1_d     => readdata1_ex1_ex2_in,
+        readdata1_q     => readdata1_ex1_ex2_out,
+        readdata2_d     => readdata2_ex1_ex2_in,
+        readdata2_q     => readdata2_ex1_ex2_out,
+        immediate_d     => immediate_ex1_ex2_in,
+        immediate_q     => immediate_ex1_ex2_out,
+        writeaddress1_d => writeaddress1_ex1_ex2_in,
+        writeaddress1_q => writeaddress1_ex1_ex2_out,
+        writeaddress2_d => writeaddress2_ex1_ex2_in,
+        writeaddress2_q => writeaddress2_ex1_ex2_out,
+        memtoreg_d      => memtoreg_ex1_ex2_in,
+        memtoreg_q      => memtoreg_ex1_ex2_out,
+        outputenable_d  => outputenable_ex1_ex2_in,
+        outputenable_q  => outputenable_ex1_ex2_out,
+        regwrite1_d     => regwrite1_ex1_ex2_in,
+        regwrite1_q     => regwrite1_ex1_ex2_out,
+        regwrite2_d     => regwrite2_ex1_ex2_in,
+        regwrite2_q     => regwrite2_ex1_ex2_out,
+        inputenable_d   => inputenable_ex1_ex2_in,
+        inputenable_q   => inputenable_ex1_ex2_out,
+        memwrite_d      => memwrite_ex1_ex2_in,
+        memwrite_q      => memwrite_ex1_ex2_out,
+        memread_d       => memread_ex1_ex2_in,
+        memread_q       => memread_ex1_ex2_out,
+        mem_add_src_d   => mem_add_src_ex1_ex2_in,
+        mem_add_src_q   => mem_add_src_ex1_ex2_out,
+        mem_data_src_d  => mem_data_src_ex1_ex2_in,
+        mem_data_src_q  => mem_data_src_ex1_ex2_out,
+        sp_dec_d        => sp_dec_ex1_ex2_in,
+        sp_dec_q        => sp_dec_ex1_ex2_out,
+        pc_src_d        => pc_src_ex1_ex2_in,
+        pc_src_q        => pc_src_ex1_ex2_out,
+        branch_d        => branch_ex1_ex2_in,
+        branch_q        => branch_ex1_ex2_out,
+        branch_type_d   => branch_type_ex1_ex2_in,
+        branch_type_q   => branch_type_ex1_ex2_out,
+        interrupt_signal_d => interrupt_ex1_ex2_in,
+        interrupt_signal_q => interrupt_ex1_ex2_out
+    );
+
+ex2_comp: execute2
+    port map(
+        sp_q            => sp_ex1_ex2_out,
+        pc1_q           => pc1_ex1_ex2_out,
+        alu_q           => alu_ex1_ex2_out,
+        inputport_q     => inputport_ex1_ex2_out,
+        readdata1_q     => readdata1_ex1_ex2_out,
+        readdata2_q     => readdata2_ex1_ex2_out,
+        immediate_q     => immediate_ex1_ex2_out,
+        writeaddress1_q => writeaddress1_ex1_ex2_out,
+        writeaddress2_q => writeaddress2_ex1_ex2_out,
+        memtoreg_q      => memtoreg_ex1_ex2_out,
+        outputenable_q  => outputenable_ex1_ex2_out,
+        regwrite1_q     => regwrite1_ex1_ex2_out,
+        regwrite2_q     => regwrite2_ex1_ex2_out,
+        inputenable_q   => inputenable_ex1_ex2_out,
+        memwrite_q      => memwrite_ex1_ex2_out,
+        memread_q       => memread_ex1_ex2_out,
+        mem_add_src_q   => mem_add_src_ex1_ex2_out,
+        mem_data_src_q  => mem_data_src_ex1_ex2_out,
+        sp_dec_q        => sp_dec_ex1_ex2_out,
+        pc_src_q        => pc_src_ex1_ex2_out,
+        branch_q        => branch_ex1_ex2_out,
+        branch_type_q   => branch_type_ex1_ex2_out,
+        ex1_interrupt_signal => interrupt_ex1_ex2_out,
+        Z_flag          => ex1_Z_flag,
+        N_flag          => ex1_N_flag,
+        C_flag          => ex1_C_flag,
+        sp_d            => sp_ex_mem_in,
+        pc1_d           => pc1_ex_mem_in,
+        alu_d           => alu_ex_mem_in,
+        mem_addr_d      => mem_addr_ex2_out,
+        inputport_d     => inputport_ex_mem_in,
+        readdata1_d     => readdata1_ex_mem_in,
+        readdata2_d     => readdata2_ex_mem_in,
         writeaddress1_d => writeaddress1_ex_mem_in,
         writeaddress2_d => writeaddress2_ex_mem_in,
-        memtoreg_d => memtoreg_ex_mem_in,
-        outputenable_d => outputenable_ex_mem_in,
-        regwrite1_d => regwrite1_ex_mem_in,
-        regwrite2_d => regwrite2_ex_mem_in,
-        inputenable_d => inputenable_ex_mem_in,
-        memwrite_d => memwrite_ex_mem_in,
-        memread_d => memread_ex_mem_in,
-        mem_add_src_d => mem_add_src_ex_mem_in,
-        mem_data_src_d => mem_data_src_ex_mem_in,
-        sp_dec_d => sp_dec_ex_mem_in,
-        pc_src_d => pc_src_ex_mem_in,
-
-        --adder ely fo2
-        pc_plus1_plus_sign_extend => pc_plus_immediate,
-
-        --branch 
-        do_branch => do_branch,
-        -- forward----
-        rs_q=> rs_id_ex_out,
-        rt_q=>rt_id_ex_out,
-
-        -------- info form ex/mem ------------------
-        ex_mem_regwrite1=>regwrite1_ex_mem_out,
-        ex_mem_regwrite2=>regwrite2_ex_mem_out,
-        ex_mem_writeaddress1=>writeaddress1_ex_mem_out,
-        ex_mem_writeaddress2=>writeaddress2_ex_mem_out,
-        ex_mem_alu_output=>alu_ex_mem_out,
-        ex_mem_readdata1=>readdata1_ex_mem_out,
-        ex_mem_readdata2=>readdata2_ex_mem_out,
-        ex_mem_inputport => inputport_ex_mem_out, 
-        ex_mem_memory_readdate => memory_mem_wb_in,
-        ex_mem_memtoreg => memtoreg_ex_mem_out,
-        ex_mem_input_enable => inputenable_ex_mem_out,
-        -------- info from mem/wb -------------------
-        mem_wb_regwrite1=>regwrite1_mem_wb_out,
-        mem_wb_regwrite2=>regwrite2_mem_wb_out,
-        mem_wb_writeaddress1=>writeaddress1_mem_wb_out,
-        mem_wb_writeaddress2=>writeaddress2_mem_wb_out,
-        mem_wb_writedata=>mem_rb_writedata1,
-        mem_wb_readdata1=>readdata1_mem_wb_out,
-        id_ex_interrupt_signal => interupt_signal_id_ex_out,
-        ex_mem_interrupt_signal => interrupt_signal_ex_mem_in
+        memtoreg_d      => memtoreg_ex_mem_in,
+        outputenable_d  => outputenable_ex_mem_in,
+        regwrite1_d     => regwrite1_ex_mem_in,
+        regwrite2_d     => regwrite2_ex_mem_in,
+        inputenable_d   => inputenable_ex_mem_in,
+        memwrite_d      => memwrite_ex_mem_in,
+        memread_d       => memread_ex_mem_in,
+        mem_add_src_d   => mem_add_src_ex_mem_in,
+        mem_data_src_d  => mem_data_src_ex_mem_in,
+        sp_dec_d        => sp_dec_ex_mem_in,
+        pc_src_d        => pc_src_ex_mem_in,
+        do_branch       => do_branch,
+        branch_target   => pc_plus_immediate,
+        ex2_interrupt_signal => interrupt_signal_ex_mem_in
     );
 
     ex_mem_comp: ex_mem_reg 
