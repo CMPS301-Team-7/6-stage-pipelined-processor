@@ -21,12 +21,19 @@ clk, reset, interrupt: in std_logic;
 -- input from excute section
 pc_plus_immediate : in std_logic_vector(31 downto 0);
 do_branch: in std_logic;
+branch_mispredict: in std_logic;
+branch_correct_pc: in std_logic_vector(31 downto 0);
+predictor_update: in std_logic;
+predictor_actual_taken: in std_logic;
 -- input from hazard detection
 pc_enable: in std_logic;
 -- output to if/id reg
 instruction_d: out std_logic_vector(31 downto 0);
 pc_d: out std_logic_vector(31 downto 0);
 inputport_d_if_id: out std_logic_vector(31 downto 0);
+predicted_taken_d: out std_logic;
+predicted_target_d: out std_logic_vector(31 downto 0);
+fetch_pc_d: out std_logic_vector(31 downto 0);
 
 --memory section
 -- input from ex/mem reg
@@ -165,6 +172,9 @@ component execute1 is
         mem_wb_writedata    : in std_logic_vector(31 downto 0);
         mem_wb_readdata1    : in std_logic_vector(31 downto 0);
         id_ex_interrupt_signal : in std_logic;
+        predicted_taken_q : in std_logic;
+        predicted_target_q : in std_logic_vector(31 downto 0);
+        fetch_pc_q : in std_logic_vector(31 downto 0);
         sp_d            : out std_logic_vector(31 downto 0);
         pc1_d           : out std_logic_vector(31 downto 0);
         alu_d           : out std_logic_vector(31 downto 0);
@@ -188,6 +198,9 @@ component execute1 is
         branch_type_d   : out std_logic_vector(1 downto 0);
         immediate_d     : out std_logic_vector(31 downto 0);
         ex1_interrupt_signal : out std_logic;
+        predicted_taken_d : out std_logic;
+        predicted_target_d : out std_logic_vector(31 downto 0);
+        fetch_pc_d : out std_logic_vector(31 downto 0);
         Z_flag : out std_logic;
         N_flag : out std_logic;
         C_flag : out std_logic
@@ -242,7 +255,13 @@ component ex1_ex2_reg is
         branch_type_d   : in  std_logic_vector(1 downto 0);
         branch_type_q   : out std_logic_vector(1 downto 0);
         interrupt_signal_d : in  std_logic;
-        interrupt_signal_q : out std_logic
+        interrupt_signal_q : out std_logic;
+        predicted_taken_d  : in  std_logic;
+        predicted_taken_q  : out std_logic;
+        predicted_target_d : in  std_logic_vector(31 downto 0);
+        predicted_target_q : out std_logic_vector(31 downto 0);
+        fetch_pc_d         : in  std_logic_vector(31 downto 0);
+        fetch_pc_q         : out std_logic_vector(31 downto 0)
     );
 end component;
 
@@ -271,6 +290,9 @@ component execute2 is
         branch_q        : in std_logic;
         branch_type_q   : in std_logic_vector(1 downto 0);
         ex1_interrupt_signal : in std_logic;
+        predicted_taken_q : in std_logic;
+        predicted_target_q : in std_logic_vector(31 downto 0);
+        fetch_pc_q : in std_logic_vector(31 downto 0);
         Z_flag : in std_logic;
         N_flag : in std_logic;
         C_flag : in std_logic;
@@ -296,6 +318,10 @@ component execute2 is
         pc_src_d        : out std_logic;
         do_branch       : out std_logic;
         branch_target   : out std_logic_vector(31 downto 0);
+        branch_mispredict : out std_logic;
+        branch_correct_pc : out std_logic_vector(31 downto 0);
+        predictor_update : out std_logic;
+        predictor_actual_taken : out std_logic;
         ex2_interrupt_signal : out std_logic
     );
 end component;
@@ -336,7 +362,13 @@ component if_id_reg is
         pc_d:in std_logic_vector(31 downto 0);
         pc_q:out std_logic_vector(31 downto 0);
         inputport_d:in std_logic_vector(31 downto 0);
-        inputport_q:out std_logic_vector(31 downto 0)
+        inputport_q:out std_logic_vector(31 downto 0);
+        predicted_taken_d: in std_logic;
+        predicted_taken_q: out std_logic;
+        predicted_target_d: in std_logic_vector(31 downto 0);
+        predicted_target_q: out std_logic_vector(31 downto 0);
+        fetch_pc_d: in std_logic_vector(31 downto 0);
+        fetch_pc_q: out std_logic_vector(31 downto 0)
 
         );
 end component;
@@ -411,7 +443,13 @@ component id_ex_reg is
         call_signal_d: in std_logic;
         call_signal_q: out std_logic;
         int_signal_d: in std_logic;
-        int_signal_q: out std_logic
+        int_signal_q: out std_logic;
+        predicted_taken_d: in std_logic;
+        predicted_taken_q: out std_logic;
+        predicted_target_d: in std_logic_vector(31 downto 0);
+        predicted_target_q: out std_logic_vector(31 downto 0);
+        fetch_pc_d: in std_logic_vector(31 downto 0);
+        fetch_pc_q: out std_logic_vector(31 downto 0)
         );
 end component;
 
@@ -510,12 +548,20 @@ end component;
 
 signal pc_plus_immediate : std_logic_vector(31 downto 0);
 signal do_branch : std_logic;
+signal branch_mispredict : std_logic;
+signal branch_correct_pc : std_logic_vector(31 downto 0);
+signal predictor_update : std_logic;
+signal predictor_actual_taken : std_logic;
 signal pc_enable : std_logic;
 signal instruction_if_id_in, input_port_if_id_in : std_logic_vector(31 downto 0);
 signal pc_if_id_in : std_logic_vector(31 downto 0);
+signal predicted_target_if_id_in, fetch_pc_if_id_in : std_logic_vector(31 downto 0);
+signal predicted_taken_if_id_in : std_logic;
 
 signal instruction_if_id_out, input_port_if_id_out : std_logic_vector(31 downto 0);
 signal pc_if_id_out : std_logic_vector(31 downto 0);
+signal predicted_target_if_id_out, fetch_pc_if_id_out : std_logic_vector(31 downto 0);
+signal predicted_taken_if_id_out : std_logic;
 
 signal mem_rb_regwrite1, mem_rb_regwrite2: std_logic;
 signal mem_rb_writeaddress1, mem_rb_writeaddress2: std_logic_vector(2 downto 0);
@@ -528,6 +574,8 @@ signal memread_id_ex_in, mem_add_src_id_ex_in, mem_data_src_id_ex_in, sp_dec_id_
 signal alu_control_id_ex_in : std_logic_vector(2 downto 0);
 signal branch_type_id_ex_in : std_logic_vector(1 downto 0);
 signal alu_src_id_ex_in, branch_id_ex_in, inc_sp_id_ex_in, set_carry_id_ex_in, ccr_store_id_ex_in, ccr_restore_id_ex_in, flag_enable_id_ex_in : std_logic;
+signal predicted_target_id_ex_in, fetch_pc_id_ex_in : std_logic_vector(31 downto 0);
+signal predicted_taken_id_ex_in : std_logic;
 
 signal immediate_id_ex_out, pc1_id_ex_out, inputport_id_ex_out, readdata1_id_ex_out, readdata2_id_ex_out : std_logic_vector(31 downto 0);
 signal writeaddress1_id_ex_out, writeaddress2_id_ex_out : std_logic_vector(2 downto 0);
@@ -536,6 +584,8 @@ signal memread_id_ex_out, mem_add_src_id_ex_out, mem_data_src_id_ex_out, sp_dec_
 signal alu_control_id_ex_out : std_logic_vector(2 downto 0);
 signal branch_type_id_ex_out : std_logic_vector(1 downto 0);
 signal alu_src_id_ex_out, branch_id_ex_out, inc_sp_id_ex_out, set_carry_id_ex_out, ccr_store_id_ex_out, ccr_restore_id_ex_out, flag_enable_id_ex_out : std_logic;
+signal predicted_target_id_ex_out, fetch_pc_id_ex_out : std_logic_vector(31 downto 0);
+signal predicted_taken_id_ex_out : std_logic;
 -- EX1 outputs -> EX1/EX2 register inputs
 signal sp_ex1_ex2_in, pc1_ex1_ex2_in, alu_ex1_ex2_in         : std_logic_vector(31 downto 0);
 signal inputport_ex1_ex2_in, readdata1_ex1_ex2_in             : std_logic_vector(31 downto 0);
@@ -549,6 +599,8 @@ signal mem_data_src_ex1_ex2_in, sp_dec_ex1_ex2_in             : std_logic;
 signal pc_src_ex1_ex2_in, branch_ex1_ex2_in                   : std_logic;
 signal branch_type_ex1_ex2_in                                 : std_logic_vector(1 downto 0);
 signal interrupt_ex1_ex2_in                                   : std_logic;
+signal predicted_target_ex1_ex2_in, fetch_pc_ex1_ex2_in        : std_logic_vector(31 downto 0);
+signal predicted_taken_ex1_ex2_in                              : std_logic;
 
 -- EX1/EX2 register outputs -> EX2 inputs
 signal sp_ex1_ex2_out, pc1_ex1_ex2_out, alu_ex1_ex2_out       : std_logic_vector(31 downto 0);
@@ -563,6 +615,8 @@ signal mem_data_src_ex1_ex2_out, sp_dec_ex1_ex2_out           : std_logic;
 signal pc_src_ex1_ex2_out, branch_ex1_ex2_out                 : std_logic;
 signal branch_type_ex1_ex2_out                                : std_logic_vector(1 downto 0);
 signal interrupt_ex1_ex2_out                                  : std_logic;
+signal predicted_target_ex1_ex2_out, fetch_pc_ex1_ex2_out      : std_logic_vector(31 downto 0);
+signal predicted_taken_ex1_ex2_out                             : std_logic;
 
 -- flags from EX1 CCR -> EX2
 signal ex1_Z_flag, ex1_N_flag, ex1_C_flag : std_logic;
@@ -658,12 +712,19 @@ interrupt => interrupt,
 -- input from excute section
 pc_plus_immediate => pc_plus_immediate,
 do_branch => do_branch,
+branch_mispredict => branch_mispredict,
+branch_correct_pc => branch_correct_pc,
+predictor_update => predictor_update,
+predictor_actual_taken => predictor_actual_taken,
 -- input from hazard detection
 pc_enable => pc_enable,
 -- output to if/id reg
 instruction_d => instruction_if_id_in,
 pc_d => pc_if_id_in,
 inputport_d_if_id => input_port_if_id_in,
+predicted_taken_d => predicted_taken_if_id_in,
+predicted_target_d => predicted_target_if_id_in,
+fetch_pc_d => fetch_pc_if_id_in,
 
 --memory section
 -- input from ex/mem reg
@@ -723,7 +784,13 @@ if_id_reg_comp: if_id_reg
         pc_d => pc_if_id_in,
         pc_q => pc_if_id_out,
         inputport_d => input_port_if_id_in,
-        inputport_q => input_port_if_id_out
+        inputport_q => input_port_if_id_out,
+        predicted_taken_d => predicted_taken_if_id_in,
+        predicted_taken_q => predicted_taken_if_id_out,
+        predicted_target_d => predicted_target_if_id_in,
+        predicted_target_q => predicted_target_if_id_out,
+        fetch_pc_d => fetch_pc_if_id_in,
+        fetch_pc_q => fetch_pc_if_id_out
     );
 
 decode_comp: decode 
@@ -850,7 +917,13 @@ id_ex_comp: id_ex_reg
         interrupt_signal_d => interrupt_signal_id_ex_in,
         interrupt_signal_q => interupt_signal_id_ex_out,
         int_signal_d => int_signal,
-        int_signal_q => int_signal_id_ex_out
+        int_signal_q => int_signal_id_ex_out,
+        predicted_taken_d => predicted_taken_if_id_out,
+        predicted_taken_q => predicted_taken_id_ex_out,
+        predicted_target_d => predicted_target_if_id_out,
+        predicted_target_q => predicted_target_id_ex_out,
+        fetch_pc_d => fetch_pc_if_id_out,
+        fetch_pc_q => fetch_pc_id_ex_out
     );
 
 
@@ -907,6 +980,9 @@ ex1_comp: execute1
         mem_wb_writedata    => mem_rb_writedata1,
         mem_wb_readdata1    => readdata1_mem_wb_out,
         id_ex_interrupt_signal => interupt_signal_id_ex_out,
+        predicted_taken_q => predicted_taken_id_ex_out,
+        predicted_target_q => predicted_target_id_ex_out,
+        fetch_pc_q => fetch_pc_id_ex_out,
         sp_d            => sp_ex1_ex2_in,
         pc1_d           => pc1_ex1_ex2_in,
         alu_d           => alu_ex1_ex2_in,
@@ -930,6 +1006,9 @@ ex1_comp: execute1
         branch_type_d   => branch_type_ex1_ex2_in,
         immediate_d     => immediate_ex1_ex2_in,
         ex1_interrupt_signal => interrupt_ex1_ex2_in,
+        predicted_taken_d => predicted_taken_ex1_ex2_in,
+        predicted_target_d => predicted_target_ex1_ex2_in,
+        fetch_pc_d => fetch_pc_ex1_ex2_in,
         Z_flag          => ex1_Z_flag,
         N_flag          => ex1_N_flag,
         C_flag          => ex1_C_flag
@@ -985,7 +1064,13 @@ ex1_ex2_reg_comp: ex1_ex2_reg
         branch_type_d   => branch_type_ex1_ex2_in,
         branch_type_q   => branch_type_ex1_ex2_out,
         interrupt_signal_d => interrupt_ex1_ex2_in,
-        interrupt_signal_q => interrupt_ex1_ex2_out
+        interrupt_signal_q => interrupt_ex1_ex2_out,
+        predicted_taken_d => predicted_taken_ex1_ex2_in,
+        predicted_taken_q => predicted_taken_ex1_ex2_out,
+        predicted_target_d => predicted_target_ex1_ex2_in,
+        predicted_target_q => predicted_target_ex1_ex2_out,
+        fetch_pc_d => fetch_pc_ex1_ex2_in,
+        fetch_pc_q => fetch_pc_ex1_ex2_out
     );
 
 ex2_comp: execute2
@@ -1013,6 +1098,9 @@ ex2_comp: execute2
         branch_q        => branch_ex1_ex2_out,
         branch_type_q   => branch_type_ex1_ex2_out,
         ex1_interrupt_signal => interrupt_ex1_ex2_out,
+        predicted_taken_q => predicted_taken_ex1_ex2_out,
+        predicted_target_q => predicted_target_ex1_ex2_out,
+        fetch_pc_q => fetch_pc_ex1_ex2_out,
         Z_flag          => ex1_Z_flag,
         N_flag          => ex1_N_flag,
         C_flag          => ex1_C_flag,
@@ -1038,6 +1126,10 @@ ex2_comp: execute2
         pc_src_d        => pc_src_ex_mem_in,
         do_branch       => do_branch,
         branch_target   => pc_plus_immediate,
+        branch_mispredict => branch_mispredict,
+        branch_correct_pc => branch_correct_pc,
+        predictor_update => predictor_update,
+        predictor_actual_taken => predictor_actual_taken,
         ex2_interrupt_signal => interrupt_signal_ex_mem_in
     );
 
@@ -1160,8 +1252,8 @@ ex2_comp: execute2
         rst_id_ex => rst_id_ex, 
         rst_ex_mem => rst_ex_mem, 
         rst_mem_wb => rst_mem_wb,
-        branch1 => do_branch,
-        branch2 => branch_ex_mem_out, 
+        branch1 => branch_mispredict,
+        branch2 => '0', 
         enable_if_id => enable_if_id, 
         enable_id_ex => enable_id_ex, 
         enable_ex_mem => enable_ex_mem, 
