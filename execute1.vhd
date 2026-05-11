@@ -43,6 +43,15 @@ entity execute1 is
         -- forwarding source register indices
         rs_q            : in std_logic_vector(2 downto 0);
         rt_q            : in std_logic_vector(2 downto 0);
+        -- forwarding data from EX1/EX2
+        ex1ex2_regwrite1     : in std_logic;
+        ex1ex2_regwrite2     : in std_logic;
+        ex1ex2_writeaddress1 : in std_logic_vector(2 downto 0);
+        ex1ex2_writeaddress2 : in std_logic_vector(2 downto 0);
+        ex1ex2_alu_output    : in std_logic_vector(31 downto 0);
+        ex1ex2_readdata1     : in std_logic_vector(31 downto 0);
+        ex1ex2_inputport     : in std_logic_vector(31 downto 0);
+        ex1ex2_input_enable  : in std_logic;
         -- forwarding data from EX/MEM
         ex_mem_regwrite1       : in std_logic;
         ex_mem_regwrite2       : in std_logic;
@@ -93,7 +102,10 @@ entity execute1 is
         -- Flags output
         Z_flag : out std_logic;
         N_flag : out std_logic;
-        C_flag : out std_logic
+        C_flag : out std_logic;
+
+        do_branch_ex2 : in std_logic;
+        branch_type_ex2 : in std_logic_vector(1 downto 0)
     );
 end execute1;
 
@@ -115,6 +127,9 @@ architecture exec1 of execute1 is
     signal readdata1_output, readdata2_output : std_logic_vector(31 downto 0);
 
     -- normalised forwarding address helpers
+    signal ex1ex2_en1, ex1ex2_en2             : std_logic;
+    signal ex1ex2_waddress1, ex1ex2_waddress2 : std_logic_vector(2 downto 0);
+    signal ex1ex2_output                      : std_logic_vector(31 downto 0);
     signal ex_mem_en1, ex_mem_en2             : std_logic;
     signal ex_mem_waddress1, ex_mem_waddress2 : std_logic_vector(2 downto 0);
     signal ex_mem_output                      : std_logic_vector(31 downto 0);
@@ -174,8 +189,8 @@ begin
             Z           => Z_reg,
             N           => N_reg,
             C           => C_reg,
-            branch_type => branch_type_q,
-            do_branch   => '0'           -- branch resolved in EX2
+            branch_type => branch_type_ex2,
+            do_branch   => do_branch_ex2
         );
 
     -- ---- CCR: stored/backup copy (for INT/RTI) ----
@@ -221,6 +236,17 @@ begin
     -- ============================================================
     -- Forwarding unit
     -- ============================================================
+    ex1ex2_en1 <= ex1ex2_regwrite1 or  ex1ex2_regwrite2;
+    ex1ex2_en2 <= ex1ex2_regwrite1 and ex1ex2_regwrite2;
+
+    ex1ex2_waddress1 <= ex1ex2_writeaddress2 when (ex1ex2_regwrite1='1' and ex1ex2_regwrite2='1')
+                        else ex1ex2_writeaddress1;
+    ex1ex2_waddress2 <= ex1ex2_writeaddress1 when (ex1ex2_regwrite1='1' and ex1ex2_regwrite2='1')
+                        else ex1ex2_writeaddress2;
+
+    ex1ex2_output <= ex1ex2_readdata1     when ex1ex2_regwrite2    = '1' else
+                    ex1ex2_inputport     when ex1ex2_input_enable = '1' else
+                    ex1ex2_alu_output;
     ex_mem_en1 <= ex_mem_regwrite1 or  ex_mem_regwrite2;
     ex_mem_en2 <= ex_mem_regwrite1 and ex_mem_regwrite2;
 
@@ -243,22 +269,27 @@ begin
                      ex_mem_alu_output;
 
     process(rs_q, rt_q,
-            ex_mem_en1, ex_mem_en2, ex_mem_waddress1, ex_mem_waddress2,
-            mem_wb_en1, mem_wb_en2, mem_wb_waddress1, mem_wb_waddress2)
+        ex1ex2_en1, ex1ex2_en2, ex1ex2_waddress1, ex1ex2_waddress2,
+        ex_mem_en1, ex_mem_en2, ex_mem_waddress1, ex_mem_waddress2,
+        mem_wb_en1, mem_wb_en2, mem_wb_waddress1, mem_wb_waddress2)
     begin
         forwardA <= "000";
         forwardB <= "000";
         -- operand A
-        if    ex_mem_en1='1' and ex_mem_waddress1 = rs_q then forwardA <= "001";
-        elsif ex_mem_en2='1' and ex_mem_waddress2 = rs_q then forwardA <= "011";
-        elsif mem_wb_en1='1' and mem_wb_waddress1 = rs_q then forwardA <= "010";
-        elsif mem_wb_en2='1' and mem_wb_waddress2 = rs_q then forwardA <= "100";
+        if    ex1ex2_en1='1' and ex1ex2_waddress1 = rs_q then forwardA <= "101";
+        elsif ex1ex2_en2='1' and ex1ex2_waddress2 = rs_q then forwardA <= "110";
+        elsif ex_mem_en1='1' and ex_mem_waddress1 = rs_q  then forwardA <= "001";
+        elsif ex_mem_en2='1' and ex_mem_waddress2 = rs_q  then forwardA <= "011";
+        elsif mem_wb_en1='1' and mem_wb_waddress1 = rs_q  then forwardA <= "010";
+        elsif mem_wb_en2='1' and mem_wb_waddress2 = rs_q  then forwardA <= "100";
         end if;
         -- operand B
-        if    ex_mem_en1='1' and ex_mem_waddress1 = rt_q then forwardB <= "001";
-        elsif ex_mem_en2='1' and ex_mem_waddress2 = rt_q then forwardB <= "011";
-        elsif mem_wb_en1='1' and mem_wb_waddress1 = rt_q then forwardB <= "010";
-        elsif mem_wb_en2='1' and mem_wb_waddress2 = rt_q then forwardB <= "100";
+        if    ex1ex2_en1='1' and ex1ex2_waddress1 = rt_q then forwardB <= "101";
+        elsif ex1ex2_en2='1' and ex1ex2_waddress2 = rt_q then forwardB <= "110";
+        elsif ex_mem_en1='1' and ex_mem_waddress1 = rt_q  then forwardB <= "001";
+        elsif ex_mem_en2='1' and ex_mem_waddress2 = rt_q  then forwardB <= "011";
+        elsif mem_wb_en1='1' and mem_wb_waddress1 = rt_q  then forwardB <= "010";
+        elsif mem_wb_en2='1' and mem_wb_waddress2 = rt_q  then forwardB <= "100";
         end if;
     end process;
 
@@ -269,6 +300,8 @@ begin
         mem_wb_writedata when "010",
         ex_mem_readdata1 when "011",
         mem_wb_readdata1 when "100",
+        ex1ex2_output    when "101",
+        ex1ex2_readdata1 when "110",
         readdata1_q      when others;
 
     --MUX for input B of ALU
@@ -278,6 +311,8 @@ begin
         mem_wb_writedata when "010",
         ex_mem_readdata1 when "011",
         mem_wb_readdata1 when "100",
+        ex1ex2_output    when "101",
+        ex1ex2_readdata1 when "110",
         readdata2_q      when others;
 
     with forwardA select readdata1_output <=
@@ -286,6 +321,8 @@ begin
         mem_wb_writedata when "010",
         ex_mem_readdata1 when "011",
         mem_wb_readdata1 when "100",
+        ex1ex2_output    when "101",
+        ex1ex2_readdata1 when "110",
         readdata1_q      when others;
 
     with forwardB select readdata2_output <=
@@ -294,6 +331,8 @@ begin
         mem_wb_writedata when "010",
         ex_mem_readdata1 when "011",
         mem_wb_readdata1 when "100",
+        ex1ex2_output    when "101",
+        ex1ex2_readdata1 when "110",
         readdata2_q      when others;
 
     -- ============================================================

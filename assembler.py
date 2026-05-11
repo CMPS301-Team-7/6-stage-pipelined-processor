@@ -77,7 +77,7 @@ def assemble_instruction(line, DATA_BASE):
     if op in ("INC", "OUT", "IN", "PUSH", "POP"):
         rd = REG[tokens[1]]
         if op == "INC":
-            return code + rd + rd + "000000000000000000100"
+            return code + rd + rd + "000000000000000000100" #Immediate = 1 for inc 
         elif op in ("IN", "POP"):
             return code + rd + "0" * 24
         else:

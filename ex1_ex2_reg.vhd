@@ -3,7 +3,6 @@ use ieee.std_logic_1164.all;
 
 -- ============================================================
 -- EX1/EX2 Pipeline Register
--- Sits between Execute-1 and Execute-2 stages
 -- ============================================================
 entity ex1_ex2_reg is
     port(
@@ -28,6 +27,11 @@ entity ex1_ex2_reg is
         writeaddress1_q : out std_logic_vector(2 downto 0);
         writeaddress2_d : in  std_logic_vector(2 downto 0);
         writeaddress2_q : out std_logic_vector(2 downto 0);
+
+        rs_d : in  std_logic_vector(2 downto 0);
+        rs_q : out std_logic_vector(2 downto 0);
+        rt_d : in  std_logic_vector(2 downto 0);
+        rt_q : out std_logic_vector(2 downto 0);
 
         -- control signals
         memtoreg_d      : in  std_logic;
@@ -75,6 +79,8 @@ begin
             immediate_q     <= (others => '0');
             writeaddress1_q <= (others => '0');
             writeaddress2_q <= (others => '0');
+            rs_q  <= (others => '0');
+            rt_q  <= (others => '0');
             memtoreg_q      <= '0';
             outputenable_q  <= '0';
             regwrite1_q     <= '0';
@@ -99,6 +105,8 @@ begin
             immediate_q     <= immediate_d;
             writeaddress1_q <= writeaddress1_d;
             writeaddress2_q <= writeaddress2_d;
+            rs_q <= rs_d;
+            rt_q <= rt_d;
             memtoreg_q      <= memtoreg_d;
             outputenable_q  <= outputenable_d;
             regwrite1_q     <= regwrite1_d;

@@ -100,10 +100,10 @@ begin
     en1<=mem_rb_regwrite1 or mem_rb_regwrite2;
     en2<=mem_rb_regwrite1 and mem_rb_regwrite2;
 
-    waddress1<= mem_rb_writeaddress2 when mem_rb_regwrite1='1' and mem_rb_regwrite2='1'
+    waddress1<= mem_rb_writeaddress2 when mem_rb_regwrite1='1' and mem_rb_regwrite2='1' --Swap condition
     else mem_rb_writeaddress1;
 
-    waddress2<= mem_rb_writeaddress1 when mem_rb_regwrite1='1' and mem_rb_regwrite2='1'
+    waddress2<= mem_rb_writeaddress1 when mem_rb_regwrite1='1' and mem_rb_regwrite2='1' --Swap condition
     else mem_rb_writeaddress2;
 
     -- rs and rt for forwarding

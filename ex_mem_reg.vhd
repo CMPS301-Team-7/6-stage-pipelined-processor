@@ -37,6 +37,8 @@ entity ex_mem_reg is
         mem_add_src_d: in std_logic;
         mem_data_src_q: out std_logic;
         mem_data_src_d: in std_logic;
+        mem_addr_d : in  std_logic_vector(31 downto 0);
+        mem_addr_q : out std_logic_vector(31 downto 0);
         sp_dec_q: out std_logic;
         sp_dec_d: in std_logic;
         pc_src_q: out std_logic;
@@ -69,6 +71,7 @@ begin
         memread_q<='0';
         mem_add_src_q<='0';
         mem_data_src_q<='0';
+        mem_addr_q <= (others => '0');
         sp_dec_q<='0';
         pc_src_q<='0';
         branch_q <= '0';
@@ -91,6 +94,7 @@ begin
         memread_q<=memread_d;
         mem_add_src_q<=mem_add_src_d;
         mem_data_src_q<=mem_data_src_d;
+        mem_addr_q <= mem_addr_d;
         sp_dec_q<=sp_dec_d;
         pc_src_q<=pc_src_d;
         branch_q <= branch_d;

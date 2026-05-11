@@ -16,7 +16,7 @@ begin
 process(Clk,Rst)
 begin
     if(Rst='1')then
-	    q<= mem1;
+	    q<= mem1; --Reset to Memory(0)
     elsif Clk'event and Clk = '1' and (enable= '1' or pc_src='1')then 
         q<=d; 
     end if;

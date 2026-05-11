@@ -37,6 +37,7 @@ memwrite_q:in std_logic;
 memread_q:in std_logic;
 mem_add_src_q: in std_logic;
 mem_data_src_q: in std_logic;
+mem_addr_in : in std_logic_vector(31 downto 0);
 sp_dec_q: in std_logic;
 pc_src_q: in std_logic;
 
@@ -77,6 +78,7 @@ component reg_file_memory is
         mem_write, mem_read : in std_logic;
         writedata : in std_logic_vector(31 downto 0);
         mem_output : out std_logic_vector(31 downto 0);
+        memory_busy : out std_logic;
         mem1 : out std_logic_vector(31 downto 0);
         mem2:out std_logic_vector(31 downto 0);
         mem3:out std_logic_vector(31 downto 0);
@@ -96,7 +98,6 @@ end component;
 signal regular_pc, pc_plus_one: std_logic_vector(31 downto 0);
 signal pc_component_d, pc_component_q: std_logic_vector(31 downto 0);
 signal mem_address, writedata, readdata: std_logic_vector(31 downto 0);
-signal sp_or_alu: std_logic_vector(31 downto 0);
 signal mem1,mem2,mem3,mem4: std_logic_vector(31 downto 0);
 
 
@@ -105,8 +106,21 @@ constant INTERRUPT_INSTR : std_logic_vector(31 downto 0) := "10011" & X"000000" 
 
 begin
     -- mem
-    memory: reg_file_memory port map (clk, reset, mem_address, pc_component_q, memwrite_q, memread_q, writedata, readdata, mem1,mem2,mem3,mem4);
-
+    memory: reg_file_memory port map (
+        clk                 => clk,
+        rst                 => reset,
+        address             => mem_address,
+        instruction_address => pc_component_q,
+        mem_write           => memwrite_q,
+        mem_read            => memread_q,
+        writedata           => writedata,
+        mem_output          => readdata,
+        memory_busy         => open,
+        mem1                => mem1,
+        mem2                => mem2,
+        mem3                => mem3,
+        mem4                => mem4
+    );
     -- fetch section 
     -- handling pc 
     regular_pc <= pc_plus_immediate when do_branch='1'
@@ -114,9 +128,9 @@ begin
 
     pc_component_d <=  readdata when pc_src_q = '1' 
     else immediate_input when call_signal='1'
-    else mem2 when interrupt='1'
-    else mem3 when int_signal='1' and index='0'
-    else mem4 when int_signal='1' and index='1'
+    else mem2 when interrupt='1' --hardware interrupt
+    else mem3 when int_signal='1' and index='0' --software interrupt 0
+    else mem4 when int_signal='1' and index='1' --software interrupt 1
     else regular_pc;
 
     pc_component: pc port map (reset, clk, pc_enable, pc_src_q, pc_component_d, mem1, pc_component_q);
@@ -145,12 +159,8 @@ begin
     else readdata2_q;
 
     -- setting mem_address
-    -- Change to use sp_ex_mem_out (from pipeline, not SP register)
-    sp_or_alu <= sp_q when mem_add_src_q = '1' else alu_q;
+    mem_address <= std_logic_vector(resize(unsigned(mem_addr_in(11 downto 0)), 32));
 
-    mem_address <= std_logic_vector(
-        (unsigned(offset) + unsigned(sp_or_alu)) mod (2**12)
-    );
     -- setting the output to mem/wb reg
     memory_d <= readdata;
     alu_d <= alu_q;

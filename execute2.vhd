@@ -102,6 +102,7 @@ begin
     -- ============================================================
     -- Branch decision
     -- ============================================================
+    -- JMP Decision Device
     process(branch_type_q, C_flag, Z_flag, N_flag)
     begin
         case branch_type_q is

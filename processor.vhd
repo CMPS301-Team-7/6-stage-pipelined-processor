@@ -47,6 +47,7 @@ memwrite_q:in std_logic;
 memread_q:in std_logic;
 mem_add_src_q: in std_logic;
 mem_data_src_q: in std_logic;
+mem_addr_in : in std_logic_vector(31 downto 0);
 sp_dec_q: in std_logic;
 pc_src_q: in std_logic;
 
@@ -116,6 +117,7 @@ end component;
 component execute1 is
     port(
         clk, rst : in std_logic;
+        -- outputs of ID/EX register
         immediate_q     : in std_logic_vector(31 downto 0);
         pc1_q           : in std_logic_vector(31 downto 0);
         inputport_q     : in std_logic_vector(31 downto 0);
@@ -143,10 +145,22 @@ component execute1 is
         ccr_store_q     : in std_logic;
         ccr_restore_q   : in std_logic;
         flag_enable_q   : in std_logic;
+        -- SP feedback from EX/MEM (for decrement chaining)
         exmem_sp        : in std_logic_vector(31 downto 0);
         exmem_decsp     : in std_logic;
+        -- forwarding source register indices
         rs_q            : in std_logic_vector(2 downto 0);
         rt_q            : in std_logic_vector(2 downto 0);
+        -- forwarding data from EX1/EX2
+        ex1ex2_regwrite1     : in std_logic;
+        ex1ex2_regwrite2     : in std_logic;
+        ex1ex2_writeaddress1 : in std_logic_vector(2 downto 0);
+        ex1ex2_writeaddress2 : in std_logic_vector(2 downto 0);
+        ex1ex2_alu_output    : in std_logic_vector(31 downto 0);
+        ex1ex2_readdata1     : in std_logic_vector(31 downto 0);
+        ex1ex2_inputport     : in std_logic_vector(31 downto 0);
+        ex1ex2_input_enable  : in std_logic;
+        -- forwarding data from EX/MEM
         ex_mem_regwrite1       : in std_logic;
         ex_mem_regwrite2       : in std_logic;
         ex_mem_writeaddress1   : in std_logic_vector(2 downto 0);
@@ -158,13 +172,17 @@ component execute1 is
         ex_mem_memory_readdate : in std_logic_vector(31 downto 0);
         ex_mem_memtoreg        : in std_logic;
         ex_mem_input_enable    : in std_logic;
+        -- forwarding data from MEM/WB
         mem_wb_regwrite1    : in std_logic;
         mem_wb_regwrite2    : in std_logic;
         mem_wb_writeaddress1: in std_logic_vector(2 downto 0);
         mem_wb_writeaddress2: in std_logic_vector(2 downto 0);
         mem_wb_writedata    : in std_logic_vector(31 downto 0);
         mem_wb_readdata1    : in std_logic_vector(31 downto 0);
+        -- interrupt pass-through
         id_ex_interrupt_signal : in std_logic;
+
+        -- ---- outputs to EX1/EX2 register ----
         sp_d            : out std_logic_vector(31 downto 0);
         pc1_d           : out std_logic_vector(31 downto 0);
         alu_d           : out std_logic_vector(31 downto 0);
@@ -186,17 +204,24 @@ component execute1 is
         pc_src_d        : out std_logic;
         branch_d        : out std_logic;
         branch_type_d   : out std_logic_vector(1 downto 0);
-        immediate_d     : out std_logic_vector(31 downto 0);
+        immediate_d     : out std_logic_vector(31 downto 0);  -- needed by EX2 for address calc
         ex1_interrupt_signal : out std_logic;
+
+        -- Flags output
         Z_flag : out std_logic;
         N_flag : out std_logic;
-        C_flag : out std_logic
+        C_flag : out std_logic;
+
+        do_branch_ex2 : in std_logic;
+        branch_type_ex2 : in std_logic_vector(1 downto 0)
     );
 end component;
 
 component ex1_ex2_reg is
     port(
         clk, rst, enable : in std_logic;
+
+        -- data path
         sp_d            : in  std_logic_vector(31 downto 0);
         sp_q            : out std_logic_vector(31 downto 0);
         pc1_d           : in  std_logic_vector(31 downto 0);
@@ -215,6 +240,13 @@ component ex1_ex2_reg is
         writeaddress1_q : out std_logic_vector(2 downto 0);
         writeaddress2_d : in  std_logic_vector(2 downto 0);
         writeaddress2_q : out std_logic_vector(2 downto 0);
+
+        rs_d : in  std_logic_vector(2 downto 0);
+        rs_q : out std_logic_vector(2 downto 0);
+        rt_d : in  std_logic_vector(2 downto 0);
+        rt_q : out std_logic_vector(2 downto 0);
+
+        -- control signals
         memtoreg_d      : in  std_logic;
         memtoreg_q      : out std_logic;
         outputenable_d  : in  std_logic;
@@ -501,9 +533,9 @@ port (
     id_ex_mem_read, id_ex_mem_write: in std_logic;
     ex_mem_mem_read, ex_mem_mem_write: in std_logic;
     call_signal,int_signal: in std_logic;
-    rst_if_id, rst_id_ex, rst_ex_mem, rst_mem_wb: out std_logic;
+    rst_if_id, rst_id_ex, rst_ex1_ex2, rst_ex_mem, rst_mem_wb: out std_logic;
     branch1, branch2 : in std_logic; 
-    enable_if_id, enable_id_ex, enable_ex_mem, enable_mem_wb: out std_logic;
+    enable_if_id, enable_id_ex, enable_ex1_ex2, enable_ex_mem, enable_mem_wb: out std_logic;
     pc_enable: out std_logic
 );
 end component;
@@ -575,6 +607,9 @@ signal rs_id_ex_out:std_logic_vector(2 downto 0);
 signal rt_id_ex_out:std_logic_vector(2 downto 0);
 signal exmem_sp: std_logic_vector(31 downto 0);
 signal exmem_decsp: std_logic;
+-- EX1/EX2 forwarding signals (rs/rt pass-through)
+signal rs_ex1_ex2_in, rs_ex1_ex2_out : std_logic_vector(2 downto 0);
+signal rt_ex1_ex2_in, rt_ex1_ex2_out : std_logic_vector(2 downto 0);
 
 signal sp_ex_mem_in, pc1_ex_mem_in, alu_ex_mem_in, inputport_ex_mem_in, readdata1_ex_mem_in : std_logic_vector(31 downto 0);
 signal readdata2_ex_mem_in : std_logic_vector(31 downto 0);
@@ -608,6 +643,7 @@ signal mem_data_src_ex_mem_out : std_logic;
 signal sp_dec_ex_mem_out : std_logic;
 signal pc_src_ex_mem_out : std_logic;
 signal branch_ex_mem_out : std_logic;
+signal mem_addr_ex_mem_in, mem_addr_ex_mem_out : std_logic_vector(31 downto 0);
 
 signal offset_assembler : std_logic_vector(31 downto 0) := x"00000000";
 
@@ -643,9 +679,6 @@ begin
 
 clk <= '0' when hlt_signal = '1'
 else clk_input;
-
-rst_ex1_ex2    <= rst_ex_mem;
-enable_ex1_ex2 <= enable_ex_mem;
 
 FetchMem_comp: fetch_mem 
 port map(
@@ -684,6 +717,7 @@ memwrite_q => memwrite_ex_mem_out,
 memread_q => memread_ex_mem_out,
 mem_add_src_q => mem_add_src_ex_mem_out,
 mem_data_src_q => mem_data_src_ex_mem_out,
+mem_addr_in => mem_addr_ex_mem_out,
 sp_dec_q => sp_dec_ex_mem_out,
 pc_src_q => pc_src_ex_mem_out,
 
@@ -889,6 +923,14 @@ ex1_comp: execute1
         exmem_decsp     => exmem_decsp,
         rs_q            => rs_id_ex_out,
         rt_q            => rt_id_ex_out,
+        ex1ex2_regwrite1     => regwrite1_ex1_ex2_out,
+        ex1ex2_regwrite2     => regwrite2_ex1_ex2_out,
+        ex1ex2_writeaddress1 => writeaddress1_ex1_ex2_out,
+        ex1ex2_writeaddress2 => writeaddress2_ex1_ex2_out,
+        ex1ex2_alu_output    => alu_ex1_ex2_out,
+        ex1ex2_readdata1     => readdata1_ex1_ex2_out,
+        ex1ex2_inputport     => inputport_ex1_ex2_out,
+        ex1ex2_input_enable  => inputenable_ex1_ex2_out,
         ex_mem_regwrite1       => regwrite1_ex_mem_out,
         ex_mem_regwrite2       => regwrite2_ex_mem_out,
         ex_mem_writeaddress1   => writeaddress1_ex_mem_out,
@@ -932,9 +974,13 @@ ex1_comp: execute1
         ex1_interrupt_signal => interrupt_ex1_ex2_in,
         Z_flag          => ex1_Z_flag,
         N_flag          => ex1_N_flag,
-        C_flag          => ex1_C_flag
+        C_flag          => ex1_C_flag,
+        do_branch_ex2   => do_branch,
+        branch_type_ex2 => branch_type_ex1_ex2_out
     );
 
+    rs_ex1_ex2_in <= rs_id_ex_out;
+    rt_ex1_ex2_in <= rt_id_ex_out;
 ex1_ex2_reg_comp: ex1_ex2_reg
     port map(
         clk    => clk,
@@ -958,6 +1004,10 @@ ex1_ex2_reg_comp: ex1_ex2_reg
         writeaddress1_q => writeaddress1_ex1_ex2_out,
         writeaddress2_d => writeaddress2_ex1_ex2_in,
         writeaddress2_q => writeaddress2_ex1_ex2_out,
+        rs_d => rs_ex1_ex2_in,
+        rs_q => rs_ex1_ex2_out,
+        rt_d => rt_ex1_ex2_in,
+        rt_q => rt_ex1_ex2_out,
         memtoreg_d      => memtoreg_ex1_ex2_in,
         memtoreg_q      => memtoreg_ex1_ex2_out,
         outputenable_d  => outputenable_ex1_ex2_in,
@@ -1019,7 +1069,7 @@ ex2_comp: execute2
         sp_d            => sp_ex_mem_in,
         pc1_d           => pc1_ex_mem_in,
         alu_d           => alu_ex_mem_in,
-        mem_addr_d      => mem_addr_ex2_out,
+        mem_addr_d      => mem_addr_ex_mem_in,
         inputport_d     => inputport_ex_mem_in,
         readdata1_d     => readdata1_ex_mem_in,
         readdata2_d     => readdata2_ex_mem_in,
@@ -1041,7 +1091,7 @@ ex2_comp: execute2
         ex2_interrupt_signal => interrupt_signal_ex_mem_in
     );
 
-    ex_mem_comp: ex_mem_reg 
+ex_mem_comp: ex_mem_reg 
     port map(
         clk => clk,
         rst => rst_ex_mem, 
@@ -1080,6 +1130,8 @@ ex2_comp: execute2
         mem_add_src_d => mem_add_src_ex_mem_in,
         mem_data_src_q => mem_data_src_ex_mem_out,
         mem_data_src_d => mem_data_src_ex_mem_in,
+        mem_addr_d => mem_addr_ex_mem_in,
+        mem_addr_q => mem_addr_ex_mem_out,
         sp_dec_q => sp_dec_ex_mem_out,
         sp_dec_d => sp_dec_ex_mem_in,
         pc_src_q => pc_src_ex_mem_out,
@@ -1090,7 +1142,7 @@ ex2_comp: execute2
         interrupt_signal_d => interrupt_signal_ex_mem_in
     );
 
-    mem_wb_comp: mem_wb_reg 
+mem_wb_comp: mem_wb_reg 
     port map(
         clk => clk,
         rst => rst_mem_wb, 
@@ -1121,7 +1173,7 @@ ex2_comp: execute2
         inputenable_d => inputenable_mem_wb_in
     );
 
-    write_back_comp: writeBack 
+write_back_comp: writeBack 
     port map (
         memData => memory_mem_wb_out, -- Memory read
         aluResult => alu_mem_wb_out, -- ALU output
@@ -1148,7 +1200,7 @@ ex2_comp: execute2
         writeBack_out => mem_rb_writedata1
     );
 
-    hazard_comp: hazard_unit
+hazard_comp: hazard_unit
     port map (
         reset => reset,
         id_ex_mem_read => memread_id_ex_out, 
@@ -1156,17 +1208,19 @@ ex2_comp: execute2
         ex_mem_mem_read => memread_ex_mem_out, 
         ex_mem_mem_write => memwrite_ex_mem_out,
         call_signal=> call_signal_id_ex_out,
+        int_signal=>int_signal_id_ex_out,
         rst_if_id => rst_if_id,
         rst_id_ex => rst_id_ex, 
+        rst_ex1_ex2 => rst_ex1_ex2,
         rst_ex_mem => rst_ex_mem, 
         rst_mem_wb => rst_mem_wb,
         branch1 => do_branch,
         branch2 => branch_ex_mem_out, 
         enable_if_id => enable_if_id, 
         enable_id_ex => enable_id_ex, 
+        enable_ex1_ex2 => enable_ex1_ex2,
         enable_ex_mem => enable_ex_mem, 
         enable_mem_wb => enable_mem_wb,
-        pc_enable => pc_enable,
-        int_signal=>int_signal_id_ex_out   
+        pc_enable => pc_enable
     );
 end architecture behaviour;

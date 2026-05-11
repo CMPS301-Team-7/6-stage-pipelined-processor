@@ -5,10 +5,10 @@ use std.textio.all;
 use ieee.std_logic_textio.all;
 
 entity reg_file_memory is
-    generic( N: integer := 32; M: integer := 4096 );
+    generic( N: integer := 32; M: integer := 1024 );
     port(
         clk, rst : in std_logic;
-        address, instruction_address  : in std_logic_vector(31 downto 0);
+        address, instruction_address  : in std_logic_vector(31 downto 0); --Verify address size later
         mem_write, mem_read : in std_logic;
         writedata : in std_logic_vector(N-1 downto 0);
         mem_output : out std_logic_vector(N-1 downto 0);
