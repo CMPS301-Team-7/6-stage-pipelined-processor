@@ -484,6 +484,8 @@ component ex_mem_reg is
         mem_add_src_d: in std_logic;
         mem_data_src_q: out std_logic;
         mem_data_src_d: in std_logic;
+        mem_addr_d : in  std_logic_vector(31 downto 0);
+        mem_addr_q : out std_logic_vector(31 downto 0);        
         sp_dec_q: out std_logic;
         sp_dec_d: in std_logic;
         pc_src_q: out std_logic;

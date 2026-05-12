@@ -114,6 +114,8 @@ architecture exec1 of execute1 is
     signal alu_result                         : std_logic_vector(31 downto 0);
     signal alu_zero_flag, alu_negative_flag, alu_carry_flag : std_logic;
     signal carry                              : std_logic;
+    signal zero                              : std_logic;
+    signal negative                           : std_logic;
     signal alu_a, alu_b                       : std_logic_vector(31 downto 0);
     signal Z_reg, N_reg, C_reg                : std_logic;
     signal ccr_z, ccr_n, ccr_c               : std_logic;
@@ -346,6 +348,8 @@ begin
     -- CCR input mux (normal vs restore-from-backup)
     -- ============================================================
     carry <= '1' when set_carry_q = '1' else alu_carry_flag;
+    zero  <=  Z_reg when set_carry_q = '1' else alu_zero_flag;
+    negative <= N_reg when set_carry_q = '1' else alu_negative_flag;
 
     process(ccr_restore_q, alu_zero_flag, carry, alu_negative_flag, ccr_z, ccr_c, ccr_n)
     begin
@@ -354,9 +358,9 @@ begin
             input_c_ccr <= ccr_c;
             input_n_ccr <= ccr_n;
         else
-            input_z_ccr <= alu_zero_flag;
+            input_z_ccr <= zero;
             input_c_ccr <= carry;
-            input_n_ccr <= alu_negative_flag;
+            input_n_ccr <= negative;
         end if;
     end process;
 
