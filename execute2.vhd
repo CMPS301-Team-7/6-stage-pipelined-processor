@@ -12,6 +12,7 @@ entity execute2 is
         -- inputs from EX1/EX2 register
         sp_q            : in std_logic_vector(31 downto 0);
         pc1_q           : in std_logic_vector(31 downto 0);
+        predicted_taken_q : in std_logic;
         alu_q           : in std_logic_vector(31 downto 0);  -- base for mem addr / result
         inputport_q     : in std_logic_vector(31 downto 0);
         readdata1_q     : in std_logic_vector(31 downto 0);
@@ -64,6 +65,8 @@ entity execute2 is
         -- branch resolution outputs (go directly to fetch/PC, not stored in register)
         do_branch       : out std_logic;
         branch_target   : out std_logic_vector(31 downto 0);
+        predictor_update : out std_logic;
+        predictor_actual_taken : out std_logic;
 
         ex2_interrupt_signal : out std_logic
     );
@@ -71,7 +74,9 @@ end execute2;
 
 architecture exec2 of execute2 is
     signal branchtype      : std_logic;
-    signal do_branch_sig   : std_logic;
+    signal actual_taken_sig : std_logic;
+    signal redirect_sig     : std_logic;
+    signal is_cond_branch   : std_logic;
     -- effective address = ALU result (Rsrc already computed in EX1) + offset
     -- Note: for LDD/STD the ALU in EX1 computes Rsrc; we add the sign-extended
     -- immediate (offset) here to form the final memory address.
@@ -97,7 +102,13 @@ begin
     -- Branch target: the immediate already holds the target address
     -- (absolute jump) as assembled by the control unit / assembler.
     -- ============================================================
-    branch_target <= immediate_q;
+    is_cond_branch <= branch_q when branch_type_q /= "00" else '0';
+    actual_taken_sig <= branchtype and branch_q;
+    redirect_sig <= is_cond_branch when predicted_taken_q /= actual_taken_sig else '0';
+
+    branch_target <= immediate_q when actual_taken_sig = '1' else pc1_q;
+    predictor_update <= is_cond_branch;
+    predictor_actual_taken <= actual_taken_sig;
 
     -- ============================================================
     -- Branch decision
@@ -114,8 +125,7 @@ begin
         end case;
     end process;
 
-    do_branch_sig <= branchtype and branch_q;
-    do_branch     <= do_branch_sig;
+    do_branch <= redirect_sig;
 
     -- ============================================================
     -- Pass-through to EX/MEM register

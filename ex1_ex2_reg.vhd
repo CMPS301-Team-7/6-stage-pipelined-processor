@@ -13,6 +13,8 @@ entity ex1_ex2_reg is
         sp_q            : out std_logic_vector(31 downto 0);
         pc1_d           : in  std_logic_vector(31 downto 0);
         pc1_q           : out std_logic_vector(31 downto 0);
+        predicted_taken_d : in std_logic;
+        predicted_taken_q : out std_logic;
         alu_d           : in  std_logic_vector(31 downto 0);
         alu_q           : out std_logic_vector(31 downto 0);
         inputport_d     : in  std_logic_vector(31 downto 0);
@@ -72,6 +74,7 @@ begin
         if rst = '1' then
             sp_q            <= (others => '0');
             pc1_q           <= (others => '0');
+            predicted_taken_q <= '0';
             alu_q           <= (others => '0');
             inputport_q     <= (others => '0');
             readdata1_q     <= (others => '0');
@@ -98,6 +101,7 @@ begin
         elsif clk'event and clk = '1' and enable = '1' then
             sp_q            <= sp_d;
             pc1_q           <= pc1_d;
+            predicted_taken_q <= predicted_taken_d;
             alu_q           <= alu_d;
             inputport_q     <= inputport_d;
             readdata1_q     <= readdata1_d;

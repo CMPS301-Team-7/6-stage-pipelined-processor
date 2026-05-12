@@ -104,6 +104,7 @@ entity execute1 is
         N_flag : out std_logic;
         C_flag : out std_logic;
 
+        flush_ex1 : in std_logic;
         do_branch_ex2 : in std_logic;
         branch_type_ex2 : in std_logic_vector(1 downto 0)
     );
@@ -120,6 +121,7 @@ architecture exec1 of execute1 is
     signal Z_reg, N_reg, C_reg                : std_logic;
     signal ccr_z, ccr_n, ccr_c               : std_logic;
     signal input_c_ccr, input_z_ccr, input_n_ccr : std_logic;
+    signal saved_z, saved_n                  : std_logic;
     signal sp_q_sig                           : std_logic_vector(31 downto 0);
     signal sp_d_temp                          : std_logic_vector(31 downto 0);
     signal sp_inc_amount                      : std_logic_vector(31 downto 0);
@@ -235,6 +237,17 @@ begin
             q   => sp_q_sig
         );
 
+    process(clk, rst)
+    begin
+        if rst = '1' then
+            saved_z <= '0';
+            saved_n <= '0';
+        elsif rising_edge(clk) then
+            saved_z <= Z_reg;
+            saved_n <= N_reg;
+        end if;
+    end process;
+
     -- ============================================================
     -- Forwarding unit
     -- ============================================================
@@ -348,8 +361,8 @@ begin
     -- CCR input mux (normal vs restore-from-backup)
     -- ============================================================
     carry <= '1' when set_carry_q = '1' else alu_carry_flag;
-    zero  <=  Z_reg when set_carry_q = '1' else alu_zero_flag;
-    negative <= N_reg when set_carry_q = '1' else alu_negative_flag;
+    zero  <= saved_z when set_carry_q = '1' else alu_zero_flag;
+    negative <= saved_n when set_carry_q = '1' else alu_negative_flag;
 
   process(ccr_restore_q, zero, carry, negative, ccr_z, ccr_c, ccr_n)
     begin
@@ -389,25 +402,25 @@ begin
     readdata2_d     <= readdata2_output;
     writeaddress1_d <= writeaddress1_q;
     writeaddress2_d <= writeaddress2_q;
-    memtoreg_d      <= memtoreg_q;
-    outputenable_d  <= outputenable_q;
-    regwrite1_d     <= regwrite1_q;
-    regwrite2_d     <= regwrite2_q;
-    inputenable_d   <= inputenable_q;
-    memwrite_d      <= memwrite_q;
-    memread_d       <= memread_q;
-    mem_add_src_d   <= mem_add_src_q;
-    mem_data_src_d  <= mem_data_src_q;
-    sp_dec_d        <= sp_dec_q;
-    pc_src_d        <= pc_src_q;
-    branch_d        <= branch_q;
-    branch_type_d   <= branch_type_q;
+    memtoreg_d      <= '0' when flush_ex1 = '1' else memtoreg_q;
+    outputenable_d  <= '0' when flush_ex1 = '1' else outputenable_q;
+    regwrite1_d     <= '0' when flush_ex1 = '1' else regwrite1_q;
+    regwrite2_d     <= '0' when flush_ex1 = '1' else regwrite2_q;
+    inputenable_d   <= '0' when flush_ex1 = '1' else inputenable_q;
+    memwrite_d      <= '0' when flush_ex1 = '1' else memwrite_q;
+    memread_d       <= '0' when flush_ex1 = '1' else memread_q;
+    mem_add_src_d   <= '0' when flush_ex1 = '1' else mem_add_src_q;
+    mem_data_src_d  <= '0' when flush_ex1 = '1' else mem_data_src_q;
+    sp_dec_d        <= '0' when flush_ex1 = '1' else sp_dec_q;
+    pc_src_d        <= '0' when flush_ex1 = '1' else pc_src_q;
+    branch_d        <= '0' when flush_ex1 = '1' else branch_q;
+    branch_type_d   <= "00" when flush_ex1 = '1' else branch_type_q;
     -- pass immediate so EX2 can compute LDD/STD effective address
     immediate_d     <= immediate_q;
-    ex1_interrupt_signal <= id_ex_interrupt_signal;
+    ex1_interrupt_signal <= '0' when flush_ex1 = '1' else id_ex_interrupt_signal;
     
     -- Flags outputs
-    Z_flag <= zero;
-    N_flag <= negative;
-    C_flag <= carry;
+    Z_flag <= Z_reg;
+    N_flag <= N_reg;
+    C_flag <= C_reg;
 end exec1;

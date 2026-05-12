@@ -7,6 +7,8 @@ entity id_ex_reg is
         immediate_q: out std_logic_vector(31 downto 0);
         pc1_d: in std_logic_vector(31 downto 0);
         pc1_q: out std_logic_vector(31 downto 0);
+        predicted_taken_d: in std_logic;
+        predicted_taken_q: out std_logic;
         inputport_d:in std_logic_vector(31 downto 0);
         inputport_q:out std_logic_vector(31 downto 0);
         readdata1_d:in std_logic_vector(31 downto 0);
@@ -81,6 +83,7 @@ begin
         inputport_q<=(others=>'0');
         immediate_q<=(others=>'0');
         pc1_q<=(others=>'0');
+        predicted_taken_q <= '0';
         readdata1_q<=(others=>'0');
         readdata2_q<=(others=>'0');
         writeaddress2_q<=(others=>'0');
@@ -114,6 +117,7 @@ begin
         inputport_q<=inputport_d;
         immediate_q<=immediate_d;
         pc1_q<=pc1_d;
+        predicted_taken_q <= predicted_taken_d;
         readdata1_q<=readdata1_d;
         readdata2_q<=readdata2_d;
         writeaddress2_q<=writeaddress2_d;

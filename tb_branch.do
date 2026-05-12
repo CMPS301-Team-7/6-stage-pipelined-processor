@@ -4,6 +4,13 @@
 # ============================================================
 
 # --- Compile ---
+if {![file exists work]} {
+    vlib work
+}
+vmap work work
+
+file copy -force tb_branch.mem test.mem
+
 vcom -2008 *.vhd
 
 

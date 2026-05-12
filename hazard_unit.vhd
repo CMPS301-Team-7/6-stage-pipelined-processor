@@ -31,9 +31,6 @@ begin
         rst_if_id <= '1'; rst_id_ex <= '1'; rst_ex1_ex2 <= '1';
         rst_ex_mem <= '1'; rst_mem_wb <= '1';
         pc_enable <= '0';
-
-    elsif branch1 = '1' then
-        rst_if_id <= '1'; rst_id_ex <= '1';-- rst_ex1_ex2 <= '1';
     end if;
 
     if call_signal = '1' or int_signal = '1' then
@@ -41,10 +38,16 @@ begin
         pc_enable <= '0';
     end if;
 
-    -- Structural hazard: stall fetch when MEM stage is using memory
+    -- Structural hazard: hold fetch/decode when MEM stage is using memory.
+    -- Resetting IF/ID here drops the instruction that was just fetched.
     if ex_mem_mem_read = '1' or ex_mem_mem_write = '1' then
-        rst_if_id <= '1';
+        enable_if_id <= '0';
         pc_enable <= '0';
+    end if;
+
+    if reset = '0' and branch1 = '1' then
+        rst_if_id <= '1'; rst_id_ex <= '1';
+        pc_enable <= '1';
     end if;
 end process;
 end architecture hazard_unit_imp;

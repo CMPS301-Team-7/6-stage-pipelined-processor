@@ -11,12 +11,15 @@ clk, reset, interrupt: in std_logic;
 -- input from excute section
 pc_plus_immediate : in std_logic_vector(31 downto 0);
 do_branch: in std_logic;
+predictor_update: in std_logic;
+predictor_actual_taken: in std_logic;
 -- input from hazard detection
 pc_enable: in std_logic;
 -- output to if/id reg
 instruction_d: out std_logic_vector(31 downto 0);
 pc_d: out std_logic_vector(31 downto 0);
 inputport_d_if_id: out std_logic_vector(31 downto 0);
+predicted_taken_d: out std_logic;
 
 --memory section
 -- input from ex/mem reg
@@ -37,6 +40,7 @@ memwrite_q:in std_logic;
 memread_q:in std_logic;
 mem_add_src_q: in std_logic;
 mem_data_src_q: in std_logic;
+mem_addr_in : in std_logic_vector(31 downto 0);
 sp_dec_q: in std_logic;
 pc_src_q: in std_logic;
 
@@ -93,11 +97,24 @@ component pc is
         q:out std_logic_vector(31 downto 0)
     );
 end component;
+component branch_predictor is
+    port (
+        clk             : in  std_logic;
+        reset           : in  std_logic;
+        fetch_is_branch : in  std_logic;
+        update_en       : in  std_logic;
+        actual_taken    : in  std_logic;
+        predicted_taken : out std_logic
+    );
+end component;
 signal regular_pc, pc_plus_one: std_logic_vector(31 downto 0);
 signal pc_component_d, pc_component_q: std_logic_vector(31 downto 0);
 signal mem_address, writedata, readdata: std_logic_vector(31 downto 0);
-signal sp_or_alu: std_logic_vector(31 downto 0);
 signal mem1,mem2,mem3,mem4: std_logic_vector(31 downto 0);
+signal fetch_opcode: std_logic_vector(4 downto 0);
+signal fetch_is_cond_branch, fetch_is_jump: std_logic;
+signal fetch_target: std_logic_vector(31 downto 0);
+signal predictor_predicted_taken, predicted_taken: std_logic;
 
 
 constant RESET_INSTR : std_logic_vector(31 downto 0) := "10000" & X"000000" & "000";
@@ -107,9 +124,32 @@ begin
     -- mem
     memory: reg_file_memory port map (clk, reset, mem_address, pc_component_q, memwrite_q, memread_q, writedata, readdata, mem1,mem2,mem3,mem4);
 
+    fetch_opcode <= readdata(31 downto 27);
+    fetch_is_cond_branch <= '1' when fetch_opcode = "11000" or
+                                     fetch_opcode = "11010" or
+                                     fetch_opcode = "11011"
+                            else '0';
+    fetch_is_jump <= '1' when fetch_opcode = "11001"
+                     else '0';
+    fetch_target <= (31 downto 16 => readdata(17)) & readdata(17 downto 2);
+
+    predictor: branch_predictor
+    port map (
+        clk             => clk,
+        reset           => reset,
+        fetch_is_branch => fetch_is_cond_branch,
+        update_en       => predictor_update,
+        actual_taken    => predictor_actual_taken,
+        predicted_taken => predictor_predicted_taken
+    );
+
+    predicted_taken <= '1' when fetch_is_jump = '1'
+                       else predictor_predicted_taken;
+
     -- fetch section 
     -- handling pc 
     regular_pc <= pc_plus_immediate when do_branch='1'
+    else fetch_target when predicted_taken = '1'
     else pc_plus_one;
 
     pc_component_d <=  readdata when pc_src_q = '1' 
@@ -125,6 +165,7 @@ begin
 
     -- passing the pc to if/id reg 
     pc_d <= pc_plus_one;
+    predicted_taken_d <= predicted_taken;
 
     -- passing the input port to if/id reg
     inputport_d_if_id <= input_port;
@@ -145,12 +186,7 @@ begin
     else readdata2_q;
 
     -- setting mem_address
-    -- Change to use sp_ex_mem_out (from pipeline, not SP register)
-    sp_or_alu <= sp_q when mem_add_src_q = '1' else alu_q;
-
-    mem_address <= std_logic_vector(
-        (unsigned(offset) + unsigned(sp_or_alu)) mod (2**12)
-    );
+    mem_address <= std_logic_vector(resize(unsigned(mem_addr_in(11 downto 0)), 32));
     -- setting the output to mem/wb reg
     memory_d <= readdata;
     alu_d <= alu_q;
