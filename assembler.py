@@ -88,7 +88,7 @@ def assemble_instruction(line, DATA_BASE):
         return code + rd + rd + "0" * 21
 
     if op == "MOV":
-        rs, rd = REG[tokens[1]], REG[tokens[2]]
+        rd, rs = REG[tokens[1]], REG[tokens[2]]
         return code + rd + "000" + rs + "0" * 18
 
     if op == "SWAP":

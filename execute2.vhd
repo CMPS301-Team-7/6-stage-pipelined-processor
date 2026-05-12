@@ -87,9 +87,9 @@ begin
     -- When mem_add_src_q = '1' the address source is Rsrc+offset,
     -- otherwise the plain ALU result is used.
     -- ============================================================
-    effective_addr <= std_logic_vector(unsigned(readdata1_q) + unsigned(immediate_q))
-                      when mem_add_src_q = '1'
-                      else alu_q;
+    effective_addr <= sp_q
+                  when mem_add_src_q = '1'
+                  else std_logic_vector(unsigned(readdata1_q) + unsigned(immediate_q));
 
     mem_addr_d <= effective_addr;
 

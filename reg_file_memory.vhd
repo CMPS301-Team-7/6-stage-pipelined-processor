@@ -70,7 +70,7 @@ begin
                 internal_memory_busy <= '1';
                 -- Priority: data memory access over instruction fetch
                 if mem_write = '1' then
-                    memory(to_integer(unsigned(address(11 downto 0)))) <= writedata;
+                    memory(to_integer(unsigned(address(9 downto 0)))) <= writedata;
                 end if;
                 -- If mem_read = '1', readdata will be available next cycle
             else
@@ -78,10 +78,10 @@ begin
             end if;
         end if;
     end process;
-   readdata <= memory(to_integer(unsigned(address(11 downto 0)))) when mem_read = '1' 
+   readdata <= memory(to_integer(unsigned(address(9 downto 0)))) when mem_read = '1' 
                 else (others => '0');
     
-    instruction <= memory(to_integer(unsigned(instruction_address(11 downto 0))));
+    instruction <= memory(to_integer(unsigned(instruction_address(9 downto 0))));
     
     -- Output selection
     mem_output <= readdata when mem_read = '1' 

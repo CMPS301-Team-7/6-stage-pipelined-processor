@@ -351,7 +351,7 @@ begin
     zero  <=  Z_reg when set_carry_q = '1' else alu_zero_flag;
     negative <= N_reg when set_carry_q = '1' else alu_negative_flag;
 
-    process(ccr_restore_q, alu_zero_flag, carry, alu_negative_flag, ccr_z, ccr_c, ccr_n)
+  process(ccr_restore_q, zero, carry, negative, ccr_z, ccr_c, ccr_n)
     begin
         if ccr_restore_q = '1' then
             input_z_ccr <= ccr_z;
@@ -368,8 +368,16 @@ begin
     -- SP calculation
     -- ============================================================
     sp_inc_amount <= std_logic_vector(unsigned(sp_q_sig) + 1) when inc_sp_q = '1' else sp_q_sig;
-    sp_d_temp     <= std_logic_vector(unsigned(exmem_sp) - 1) when exmem_decsp = '1' else sp_inc_amount;
-    sp_d          <= sp_d_temp;
+
+    -- Update SP register immediately using control signals (no stale feedback):
+    sp_d_temp <= std_logic_vector(unsigned(sp_q_sig) - 1) when sp_dec_q = '1'
+                    else sp_inc_amount;
+
+    -- Pass the correct SP address through the pipeline:
+    -- PUSH: pre-decrement SP (current SP = write address)
+    -- POP/others: post-increment SP (sp_inc_amount)
+    sp_d <= sp_q_sig    when sp_dec_q = '1'
+                    else sp_inc_amount;
 
     -- ============================================================
     -- Output assignments to EX1/EX2 pipeline register
@@ -399,7 +407,7 @@ begin
     ex1_interrupt_signal <= id_ex_interrupt_signal;
     
     -- Flags outputs
-    Z_flag <= Z_reg;
-    N_flag <= N_reg;
-    C_flag <= C_reg;
+    Z_flag <= zero;
+    N_flag <= negative;
+    C_flag <= carry;
 end exec1;

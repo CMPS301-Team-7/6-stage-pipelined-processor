@@ -72,6 +72,8 @@ begin
             hlt_signal <= '1';
         elsif rst = '1' then
             hlt_signal <= '0';
+        else
+            hlt_signal <= '0';
         end if;
     end process;
     -- reg file

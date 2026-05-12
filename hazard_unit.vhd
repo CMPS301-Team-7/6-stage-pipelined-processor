@@ -33,7 +33,7 @@ begin
         pc_enable <= '0';
 
     elsif branch1 = '1' then
-        rst_if_id <= '1'; rst_id_ex <= '1'; rst_ex1_ex2 <= '1';
+        rst_if_id <= '1'; rst_id_ex <= '1';-- rst_ex1_ex2 <= '1';
     end if;
 
     if call_signal = '1' or int_signal = '1' then
@@ -41,11 +41,7 @@ begin
         pc_enable <= '0';
     end if;
 
-    if id_ex_mem_read = '1' or id_ex_mem_write = '1' then
-        enable_if_id <= '0';
-        rst_id_ex    <= '1';
-        pc_enable    <= '0';
-    end if;
+    -- Structural hazard: stall fetch when MEM stage is using memory
     if ex_mem_mem_read = '1' or ex_mem_mem_write = '1' then
         rst_if_id <= '1';
         pc_enable <= '0';
